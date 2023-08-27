@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"survey"
-	"survey/internal/authenticator"
-	"survey/internal/templates"
+	"poker"
+	"poker/internal/authenticator"
+	"poker/internal/store/dynamo"
+	"poker/internal/templates"
 	"time"
 
 	"github.com/ddouglas/dynastore"
@@ -15,7 +16,7 @@ import (
 )
 
 type server struct {
-	env      survey.Environment
+	env      poker.Environment
 	port     string
 	http     *http.Server
 	logger   *logrus.Logger
@@ -25,15 +26,20 @@ type server struct {
 	// Services
 	authenticator *authenticator.Service
 	templates     *templates.Service
+
+	// Repositories
+	userRepo *dynamo.UserRepository
 }
 
 func New(
-	env survey.Environment,
+	env poker.Environment,
 	port string,
 	logger *logrus.Logger,
 
 	authenticator *authenticator.Service,
 	sessions *dynastore.Store,
+
+	userRepo *dynamo.UserRepository,
 ) *server {
 	s := &server{
 		env:      env,
@@ -42,6 +48,8 @@ func New(
 		sessions: sessions,
 
 		authenticator: authenticator,
+
+		userRepo: userRepo,
 	}
 
 	s.router = s.buildRouter()
@@ -99,12 +107,15 @@ func (s *server) buildRouter() *mux.Router {
 		})
 	})
 
-	router.HandleFunc("/", s.handleHome).Name("homepage")
+	router.HandleFunc("/", s.handleHome).Name("home")
 	router.HandleFunc("/login", s.handleLogin).Name("login")
-
 	router.HandleFunc("/static/style.css", s.handleCSS).Name("styles-css")
+	router.PathPrefix("/static").Handler(http.StripPrefix("/static/", http.FileServer(http.FS(poker.AssetFS(s.env))))).Name("static")
 
-	router.PathPrefix("/static").Handler(http.StripPrefix("/static/", http.FileServer(http.FS(survey.AssetFS(s.env))))).Name("static")
+	authed := router.NewRoute().Subrouter()
+	authed.Use(s.auth)
+	authed.HandleFunc("/dashboard", s.handleDashboard).Name("dashboard")
+
 	return router
 }
 

@@ -4,14 +4,14 @@ import (
 	"fmt"
 	html "html/template"
 	"io"
-	"survey"
+	"poker"
 
 	"github.com/sirupsen/logrus"
 )
 
 type Service struct {
 	logger      *logrus.Logger
-	environment survey.Environment
+	environment poker.Environment
 	registry    *html.Template
 	templates   map[string]*Template
 	funcMap     html.FuncMap
@@ -23,7 +23,7 @@ type Template struct {
 }
 
 func New(
-	env survey.Environment,
+	env poker.Environment,
 	logger *logrus.Logger,
 	cfgFuncs ...ConfigFunc,
 ) (*Service, error) {
@@ -94,7 +94,7 @@ func (s *Service) withTemplate(t *Template) {
 
 func (s *Service) mustRead(path string) string {
 
-	fs := survey.TemplateFS(s.environment)
+	fs := poker.TemplateFS(s.environment)
 
 	f, err := fs.Open(path)
 	if err != nil {

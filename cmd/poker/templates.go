@@ -1,6 +1,6 @@
 package main
 
-import "survey/internal/templates"
+import "poker/internal/templates"
 
 var templateFiles = []*templates.Template{
 	{

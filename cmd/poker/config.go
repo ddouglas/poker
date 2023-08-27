@@ -1,7 +1,7 @@
 package main
 
 import (
-	"survey"
+	"poker"
 
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
@@ -17,7 +17,7 @@ var appConfig struct {
 	Session struct {
 		Key string `envconfig:"SESSION_KEY" required:"true"`
 	}
-	Environment survey.Environment `envconfig:"ENVIRONMENT" required:"true"`
+	Environment poker.Environment `envconfig:"ENVIRONMENT" required:"true"`
 	Server      struct {
 		Port string `envconfig:"SERVER_PORT" required:"true"`
 	}

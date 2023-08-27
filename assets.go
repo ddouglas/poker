@@ -1,4 +1,4 @@
-package survey
+package poker
 
 import (
 	"embed"

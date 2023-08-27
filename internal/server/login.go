@@ -3,9 +3,11 @@ package server
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 	"net/http"
+	"poker"
 
-	"github.com/davecgh/go-spew/spew"
+	"github.com/google/uuid"
 )
 
 func (s *server) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -35,7 +37,6 @@ func (s *server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		}
 
 		session.Values["state"] = state
-
 		err = session.Save(r, w)
 		if err != nil {
 			s.logger.WithError(err).Error("failed to save state for authentication request")
@@ -47,8 +48,6 @@ func (s *server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusTemporaryRedirect)
 		return
 	}
-
-	spew.Dump(session.Values)
 
 	sessionState, ok := session.Values["state"]
 	if !ok {
@@ -72,7 +71,7 @@ func (s *server) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	idToken, err := s.authenticator.VerifyIDToken(ctx, token)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to exchange code for token")
+		s.logger.WithError(err).Error("failed to verify id token")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -80,13 +79,44 @@ func (s *server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	var profile = make(map[string]any)
 	err = idToken.Claims(&profile)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to exchange code for token")
+		s.logger.WithError(err).Error("failed to provision claims token")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	session.Values["access_token"] = token.AccessToken
-	session.Values["profile"] = profile
+	emailInf, ok := profile["name"]
+	if !ok {
+		s.logger.WithError(err).Error("profile is missing informaiton necessary to identify user")
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	user, err := s.userRepo.UserByEmail(ctx, emailInf.(string))
+	if err != nil {
+		s.logger.WithError(err).Error("failed to look up user")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if user == nil {
+		user = &poker.User{
+			ID:    uuid.New().String(),
+			Name:  fmt.Sprintf("%s %s", profile["given_name"], profile["family_name"]),
+			Email: emailInf.(string),
+		}
+
+		// Support reaching out to the profile api to retrive emaployee id and profile uri
+
+		err := s.userRepo.SaveUser(ctx, user)
+		if err != nil {
+			s.logger.WithError(err).Error("failed to save user")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+	}
+
+	session.Values["userID"] = user.ID
 
 	err = session.Save(r, w)
 	if err != nil {
@@ -95,9 +125,8 @@ func (s *server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Location", "/profile")
-	w.WriteHeader(http.StatusTemporaryRedirect)
-	return
+	s.writeRedirectRouteName(w, "dashboard")
+
 }
 
 func generateRandomState() (string, error) {

@@ -1,4 +1,4 @@
-package survey
+package poker
 
 type Environment string
 
