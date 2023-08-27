@@ -1,0 +1,21 @@
+.banner {
+    height: 95vh;
+    width: 100vw;
+    position: relative;
+    background-size: cover !important;
+    background-image: url('{{route "static"}}/images/check-cards.jpeg')
+}
+
+.overlay {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 400;
+    left: 0;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: top;
+    flex-direction: column;
+}
