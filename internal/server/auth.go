@@ -5,7 +5,7 @@ import (
 	"poker/internal"
 )
 
-func (s *server) auth(handler http.Handler) http.Handler {
+func (s *server) user(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		var ctx = r.Context()
@@ -20,20 +20,38 @@ func (s *server) auth(handler http.Handler) http.Handler {
 
 		userID, ok := session.Values["userID"]
 		if !ok {
-			s.writeRedirectRouteName(w, "login")
+			handler.ServeHTTP(w, r)
 			return
 		}
 
 		user, err := s.userRepo.User(ctx, userID.(string))
 		if err != nil {
 			s.logger.WithError(err).Error("failed to look up user by id")
-			s.writeRedirectRouteName(w, "login")
+			// s.writeRedirectRouteName(w, "login")
+			handler.ServeHTTP(w, r)
 			return
 		}
 
 		ctx = internal.ContextWithUser(ctx, user)
 
 		handler.ServeHTTP(w, r.WithContext(ctx))
+
+	})
+}
+
+func (s *server) auth(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		var ctx = r.Context()
+
+		user := internal.UserFromContext(ctx)
+		if user == nil {
+			s.logger.Error("no user found in context, redirecting")
+			s.writeRedirectRouteName(w, "login")
+			return
+		}
+
+		handler.ServeHTTP(w, r)
 
 	})
 }

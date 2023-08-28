@@ -1,0 +1,13 @@
+<tr>
+    <td>{{.Idx}}</td>
+    <td>{{.Data.SmallBlind}}</td>
+    <td>{{.Data.BigBlind}}</td>
+    <td>{{.Data.Ante}}</td>
+    <td>{{.Data.DurationSec}}</td>
+
+    <td>
+        <button hx-swap="outerHTML" hx-get="{{route "partials-dashboard-timer-level" "timerID" .Data.TimerID "levelType" .Data.Type}}?idx={{.Idx}}" class="btn btn-primary">
+            <i class="fa-solid fa-pencil"></i>
+        </button>
+    </td>
+</tr>

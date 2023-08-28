@@ -2,9 +2,13 @@ package templates
 
 import (
 	"fmt"
-	html "html/template"
 	"io"
+	"io/fs"
+	"path/filepath"
 	"poker"
+	"poker/internal/store/dynamo"
+	"strings"
+	text "text/template"
 
 	"github.com/sirupsen/logrus"
 )
@@ -12,9 +16,15 @@ import (
 type Service struct {
 	logger      *logrus.Logger
 	environment poker.Environment
-	registry    *html.Template
+	registry    *text.Template
 	templates   map[string]*Template
-	funcMap     html.FuncMap
+	funcMap     text.FuncMap
+
+	timerRepo *dynamo.TimerRepository
+}
+
+type ViewData struct {
+	User *poker.User
 }
 
 type Template struct {
@@ -22,17 +32,27 @@ type Template struct {
 	Path string
 }
 
+type structWithIdx struct {
+	Idx  int
+	Data any
+}
+
 func New(
 	env poker.Environment,
 	logger *logrus.Logger,
+
+	timerRepo *dynamo.TimerRepository,
+
 	cfgFuncs ...ConfigFunc,
 ) (*Service, error) {
 	s := &Service{
 		environment: env,
-		registry:    html.New(""),
+		registry:    text.New(""),
 		logger:      logger,
-		funcMap:     make(html.FuncMap),
+		funcMap:     make(text.FuncMap),
 		templates:   make(map[string]*Template),
+
+		timerRepo: timerRepo,
 	}
 
 	for _, f := range cfgFuncs {
@@ -42,24 +62,14 @@ func New(
 		}
 	}
 
+	s.registerFunctions()
+
+	s.registerTemplates()
+
 	return s, nil
 }
 
 type ConfigFunc func(s *Service) error
-
-func WithTemplate(t *Template) ConfigFunc {
-	return func(s *Service) error {
-		if _, ok := s.templates[t.Name]; ok {
-			return fmt.Errorf("template with name %s has already been registered", t.Name)
-		}
-
-		s.templates[t.Name] = t
-
-		s.withTemplate(t)
-		return nil
-	}
-
-}
 
 func WithFunction(name string, f any) ConfigFunc {
 
@@ -75,13 +85,31 @@ func WithFunction(name string, f any) ConfigFunc {
 }
 
 func (s *Service) RefreshTemplates() {
-	s.registry = html.New("")
-	for _, t := range s.templates {
-		s.withTemplate(t)
+	s.registry = text.New("")
+
+	s.registerTemplates()
+}
+
+func (s *Service) registerFunctions() {
+	s.funcMap["structWithIdx"] = func(i int, data any) structWithIdx {
+		return structWithIdx{
+			Idx:  i,
+			Data: data,
+		}
 	}
+
+	s.funcMap["renderPartialDashboardStandings"] = s.RenderPartialDashboardStandings
+	s.funcMap["renderNavbar"] = s.renderNavbar
+	s.funcMap["renderPartialTop"] = s.renderPartialTop
+	s.funcMap["renderPartialBottom"] = s.renderPartialBottom
+	s.funcMap["renderPartialDashboardUserMenu"] = s.renderPartialDashboardUserMenu
+	s.funcMap["renderPartialDashboardTimers"] = s.RenderPartialDashboardTimers
+	s.funcMap["renderPartialDashboardTimer"] = s.RenderPartialDashboardTimer
+	s.funcMap["renderPartialTimerLevel"] = s.renderPartialTimerLevel
 }
 
 func (s *Service) withTemplate(t *Template) {
+
 	data := s.mustRead(t.Path)
 
 	_, err := s.getRegistry().New(t.Name).Parse(data)
@@ -90,6 +118,37 @@ func (s *Service) withTemplate(t *Template) {
 			WithField("name", t.Name).WithField("path", t.Path).
 			Fatal("failed to parse template")
 	}
+}
+
+func (s *Service) registerTemplates() {
+	templateFS := poker.TemplateFS(s.environment)
+
+	err := fs.WalkDir(templateFS, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Skip Directories
+		if d.IsDir() {
+			return nil
+		}
+
+		ext := filepath.Ext(path)
+
+		name := strings.TrimSuffix(path, ext)
+
+		s.withTemplate(&Template{
+			Name: name,
+			Path: path,
+		})
+
+		return nil
+
+	})
+	if err != nil {
+		s.logger.WithError(err).Fatal("failed to walk template fs")
+	}
+
 }
 
 func (s *Service) mustRead(path string) string {
@@ -112,6 +171,6 @@ func (s *Service) mustRead(path string) string {
 
 }
 
-func (s *Service) getRegistry() *html.Template {
+func (s *Service) getRegistry() *text.Template {
 	return s.registry.Funcs(s.funcMap)
 }

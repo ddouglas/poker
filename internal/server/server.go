@@ -12,6 +12,7 @@ import (
 
 	"github.com/ddouglas/dynastore"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/schema"
 	"github.com/sirupsen/logrus"
 )
 
@@ -22,13 +23,15 @@ type server struct {
 	logger   *logrus.Logger
 	router   *mux.Router
 	sessions *dynastore.Store
+	decoder  *schema.Decoder
 
 	// Services
 	authenticator *authenticator.Service
 	templates     *templates.Service
 
 	// Repositories
-	userRepo *dynamo.UserRepository
+	timerRepo *dynamo.TimerRepository
+	userRepo  *dynamo.UserRepository
 }
 
 func New(
@@ -39,17 +42,21 @@ func New(
 	authenticator *authenticator.Service,
 	sessions *dynastore.Store,
 
+	timerRepo *dynamo.TimerRepository,
 	userRepo *dynamo.UserRepository,
 ) *server {
+
 	s := &server{
 		env:      env,
 		port:     port,
 		logger:   logger,
 		sessions: sessions,
+		decoder:  schema.NewDecoder(),
 
 		authenticator: authenticator,
 
-		userRepo: userRepo,
+		timerRepo: timerRepo,
+		userRepo:  userRepo,
 	}
 
 	s.router = s.buildRouter()
@@ -76,11 +83,18 @@ func (s *server) GracefullyShutdown(ctx context.Context) error {
 	return s.http.Shutdown(ctx)
 }
 
-func (s *server) BuildRoute(name string, pairs ...string) (string, error) {
+func (s *server) BuildRoute(name string, pairsInf ...any) (string, error) {
 
 	route := s.router.GetRoute(name)
 	if route == nil {
-		return "", fmt.Errorf("failed to build url for %s with %d args, route not found", name, len(pairs))
+		return "", fmt.Errorf("failed to build url for %s with %d args, route not found", name, len(pairsInf))
+	}
+
+	// spew.Dump(name, pairsInf)
+
+	var pairs = make([]string, 0, len(pairsInf))
+	for _, o := range pairsInf {
+		pairs = append(pairs, fmt.Sprintf("%v", o))
 	}
 
 	out, err := route.URL(pairs...)
@@ -106,6 +120,7 @@ func (s *server) buildRouter() *mux.Router {
 
 		})
 	})
+	router.Use(s.user)
 
 	router.HandleFunc("/", s.handleHome).Name("home")
 	router.HandleFunc("/login", s.handleLogin).Name("login")
@@ -115,6 +130,46 @@ func (s *server) buildRouter() *mux.Router {
 	authed := router.NewRoute().Subrouter()
 	authed.Use(s.auth)
 	authed.HandleFunc("/dashboard", s.handleDashboard).Name("dashboard")
+	authed.HandleFunc("/dashboard/timers", s.handleDashboardTimers).Name("dashboard-timers")
+	authed.HandleFunc("/dashboard/timers/{timerID}", s.handleGetDashboardTimer).Methods(http.MethodGet).Name("dashboard-timer")
+
+	partials := router.NewRoute().Subrouter()
+	partials.Use(s.auth)
+	partials.Use(func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			hxRequestHeader := r.Header.Get("HX-Request")
+			if hxRequestHeader != "true" {
+				s.logger.Error("Required Header HX-Request missing from request")
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			h.ServeHTTP(w, r)
+
+		})
+	})
+
+	partials.HandleFunc("/partials/dashboard/timers/new", s.handleGetPartialDashboardNewTimer).Methods(http.MethodGet).Name("partials-dashboard-timers-new")
+	partials.HandleFunc("/partials/dashboard/timers/new", s.handlePostPartialDashboardNewTimer).Methods(http.MethodPost)
+
+	partials.HandleFunc("/partials/dashboard/timers", s.handlePartialDashboardTimers).
+		Methods(http.MethodGet).Name("partials-dashboard-timers")
+
+	partials.HandleFunc("/partials/dashboard/timers/{timerID}", s.handleGetPartialDashboardTimer).
+		Methods(http.MethodGet).Name("partials-dashboard-timer")
+
+	partials.HandleFunc("/partials/dashboard/timers/{timerID}", s.handleDeletePartialDashboardTimer).
+		Methods(http.MethodDelete).Name("partials-dashboard-timer")
+
+	partials.HandleFunc("/partials/dashboard/timers/{timerID}/levels/{levelType}", s.handleGetPartialDashboardTimerLevel).
+		Methods(http.MethodGet).Name("partials-dashboard-timer-level")
+	partials.HandleFunc("/partials/dashboard/timers/{timerID}/levels/{levelType}", s.handlePostPartialsDashboardTimerLevel).
+		Methods(http.MethodPost)
+	partials.HandleFunc("/partials/dashboard/timers/{timerID}/levels/{levelType}", s.handlePutPartialsDashboardTimerLevel).
+		Methods(http.MethodPut)
+
+	// Dashboard Standings
+	partials.HandleFunc("/partials/dashboard/standings", s.handlePartialDashboardStandings).Name("partials-dashboard-standings")
 
 	return router
 }

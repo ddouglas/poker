@@ -1,0 +1,27 @@
+<div class="container" id="dashboard-section" hx-swap-oob="true">
+    <div class="row">
+        <div class="col">
+            <h5 class="text-center">My Blind Timers</h5>
+            <hr />
+        </div>
+    </div>
+    <div class="row mb-3">
+        <div class="col">
+            <div class="list-group">
+                {{range .Timers}}
+                <!-- Leaving this temlate call here for right now -->
+                {{template "partials/timers/item" .}}
+                {{ else }}
+                <div class="alert alert-info text-center">
+                    You don't have any timers. Click below to create one now
+                </div>
+                {{end}}
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <button hx-get="{{route "partials-dashboard-timers-new"}}" hx-target="#dashboard-section" class="btn btn-primary">Create New Timer</button>
+        </div>
+    </div>
+</div>

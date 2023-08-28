@@ -1,0 +1,25 @@
+<div class="container" id="dashboard-section" hx-swap-oob="true">
+    <div class="row">
+        <div class="col">
+            <h5 class="text-center">Create A New Timer</h5>
+            <hr />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-6 offset-3">
+            <div class="card">
+                <div class="card-body">
+                    <form hx-post="{{route "partials-dashboard-timers-new"}}" hx-target="#dashboard-section">
+                        <div class="mb-3">
+                            <label class="form-label">Timer Name</label>
+                            <input type="text" class="form-control" autocomplete="off" name="name">
+                        </div>
+                        <div class="d-flex justify-content-center">
+                            <button type="submit" class="btn btn-primary">Create Timer</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

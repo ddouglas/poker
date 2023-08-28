@@ -46,6 +46,7 @@ func main() {
 		logger.WithError(err).Fatal("failed to provision authenticator service")
 	}
 
+	timerRepo := dynamo.NewTimerRepository(svc, "poker-timers-us-east-1")
 	userRepo := dynamo.NewUserRepository(svc, "poker-users-us-east-1")
 
 	server := server.New(
@@ -56,18 +57,17 @@ func main() {
 		authSrv,
 		sessionStore,
 
+		timerRepo,
 		userRepo,
 	)
 
 	tmplConfigs := make([]templates.ConfigFunc, 0)
 	tmplConfigs = append(tmplConfigs, templates.WithFunction("route", server.BuildRoute))
-	for _, t := range templateFiles {
-		tmplConfigs = append(tmplConfigs, templates.WithTemplate(t))
-	}
 
 	tmpl, err := templates.New(
 		appConfig.Environment,
 		logger,
+		timerRepo,
 		tmplConfigs...,
 	)
 	if err != nil {
