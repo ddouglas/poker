@@ -1,0 +1,22 @@
+{
+  "name": "poker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc countdown.ts --outFile ../../assets/js/countdown.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ddouglas/poker.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ddouglas/poker/issues"
+  },
+  "homepage": "https://github.com/ddouglas/poker#readme",
+  "devDependencies": {
+    "typescript": "^5.2.2"
+  }
+}

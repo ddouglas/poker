@@ -1,0 +1,31 @@
+.banner {
+    height: 100vh;
+    width: 100vw;
+    position: relative;
+    overflow: hidden;
+    background-size: cover !important;
+    background-image: url("/static/images/check-cards.jpeg");
+    z-index: -1;
+}
+
+.overlay {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    padding-top: 100px;
+    left: 0;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+.timer-container {
+    height: 400px
+}
+
+.timer-large-font {
+    font-size: 200px;
+}

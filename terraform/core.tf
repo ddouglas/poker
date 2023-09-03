@@ -11,7 +11,7 @@ provider "aws" {
   region = "us-east-1"
   default_tags {
     tags = {
-      Repository = "https://github.com/ddouglas/rv-poker"
+      Repository = "https://github.com/ddouglas/poker"
     }
   }
 }

@@ -3,13 +3,13 @@ module poker
 go 1.20
 
 require (
+	github.com/a-h/templ v0.2.316
 	github.com/aws/aws-sdk-go-v2 v1.21.0
 	github.com/aws/aws-sdk-go-v2/config v1.13.1
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.10.39
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression v1.4.66
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.21.5
 	github.com/coreos/go-oidc/v3 v3.6.0
-	github.com/davecgh/go-spew v1.1.1
 	github.com/ddouglas/dynastore v0.2.1
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0

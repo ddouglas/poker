@@ -2,16 +2,15 @@ package server
 
 import (
 	"net/http"
-	"poker/internal/templates"
+	"poker/internal"
 )
 
 func (s *server) handleDashboard(w http.ResponseWriter, r *http.Request) {
 
 	var ctx = r.Context()
 
-	props := templates.NewDashboardProps(ctx, w)
-
-	err := s.templates.RenderDashboard(props)
+	var user = internal.UserFromContext(ctx)
+	err := s.templates.Dashboard(ctx, user).Render(ctx, w)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to render dashboard")
 		w.WriteHeader(http.StatusInternalServerError)

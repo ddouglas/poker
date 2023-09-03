@@ -1,0 +1,58 @@
+package templates
+
+import (
+"fmt"
+"poker"
+"time"
+)
+
+type PlayProps struct {
+	User *poker.User
+	Timer *poker.Timer
+}
+
+templ (s *Service) Play(ctx context.Context, props *PlayProps) {
+	<html lang="en">
+		@s.top()
+		<body>
+			@s.navbar(ctx, props.User)
+			<div class="container">
+				<div class="row">
+					<div class="col-10 offset-1">
+						<h1 class="text-center">Timer { props.Timer.Name }</h1>
+						<hr/>
+						<div class="row">
+							<div class="col">
+								<div class="timer-container d-flex justify-content-center align-items-center">
+									<div id="timer" class="timer-large-font">00:00</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-5">
+								<div class="d-flex justify-content-center">
+									<div class="text-center">
+										<h1>Current Level:<br/>1</h1>
+									</div>
+								</div>
+							</div>
+							<div class="col-2"><button id="toggle-timer" class="btn btn-primary">Play</button></div>
+							<div class="col-5">
+								<div class="d-flex justify-content-center">
+									<div class="text-center">
+										<h1>Current Blinds<br/>100/200</h1>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			@s.bottom()
+			@s.setCountdownData(props.Timer.Levels)
+			<script src={ fmt.Sprintf("%s/js/countdown.js?v=%d", s.buildRoute("static"), time.Now().Unix()) }></script>
+		</body>
+		
+	</html>
+}
+

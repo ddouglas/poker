@@ -43,7 +43,6 @@ type TimerLevel struct {
 	SmallBlind  uint
 	BigBlind    uint
 	Ante        uint
+	DurationMin uint
 	DurationSec uint
-	TSCreated   time.Time
-	TSUpdated   time.Time
 }

@@ -1,3 +1,5 @@
+github.com/a-h/templ v0.2.316 h1:s52MtlmUG9vg2xDSWTR/cnc5VbukVjCJyNvprCNFp0Q=
+github.com/a-h/templ v0.2.316/go.mod h1:3oc37WS5rpDvFGi6yeknvTKt50xCu67ywQsM43Wr4PU=
 github.com/aws/aws-sdk-go-v2 v1.13.0/go.mod h1:L6+ZpqHaLbAaxsqV0L4cvxZY7QupWJB4fhkf8LXvC7w=
 github.com/aws/aws-sdk-go-v2 v1.21.0 h1:gMT0IW+03wtYJhRqTVYn0wLzwdnK9sRMcxmtfGzRdJc=
 github.com/aws/aws-sdk-go-v2 v1.21.0/go.mod h1:/RfNgGmRxI+iFOB1OeJUyxiU+9s88k3pfHvDagGEp0M=

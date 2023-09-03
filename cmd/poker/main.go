@@ -61,14 +61,10 @@ func main() {
 		userRepo,
 	)
 
-	tmplConfigs := make([]templates.ConfigFunc, 0)
-	tmplConfigs = append(tmplConfigs, templates.WithFunction("route", server.BuildRoute))
-
 	tmpl, err := templates.New(
 		appConfig.Environment,
 		logger,
 		timerRepo,
-		tmplConfigs...,
 	)
 	if err != nil {
 		logger.WithError(err).Fatal("failed to provision template service")

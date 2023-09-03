@@ -12,9 +12,7 @@ const (
 )
 
 func ContextWithUser(ctx context.Context, user *poker.User) context.Context {
-
 	return context.WithValue(ctx, userCtxKey, user)
-
 }
 
 func UserFromContext(ctx context.Context) *poker.User {

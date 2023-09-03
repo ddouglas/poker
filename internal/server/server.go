@@ -72,10 +72,10 @@ func New(
 }
 
 func (s *server) Run(tmpl *templates.Service) error {
-
+	tmpl.SetRouteBuild(s.BuildRoute)
 	s.templates = tmpl
 
-	s.logger.Infof("Starting Server on Port %s", s.port)
+	s.logger.Infof("Starting Server: http://localhost:%s", s.port)
 	return s.http.ListenAndServe()
 }
 
@@ -89,8 +89,6 @@ func (s *server) BuildRoute(name string, pairsInf ...any) (string, error) {
 	if route == nil {
 		return "", fmt.Errorf("failed to build url for %s with %d args, route not found", name, len(pairsInf))
 	}
-
-	// spew.Dump(name, pairsInf)
 
 	var pairs = make([]string, 0, len(pairsInf))
 	for _, o := range pairsInf {
@@ -109,89 +107,50 @@ func (s *server) BuildRoute(name string, pairsInf ...any) (string, error) {
 func (s *server) buildRouter() *mux.Router {
 
 	router := mux.NewRouter()
-	router.Use(func(h http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-			if !s.env.IsProduction() {
-				s.templates.RefreshTemplates()
-			}
-
-			h.ServeHTTP(w, r)
-
-		})
-	})
 	router.Use(s.user)
 
 	router.HandleFunc("/", s.handleHome).Name("home")
 	router.HandleFunc("/login", s.handleLogin).Name("login")
-	router.HandleFunc("/static/style.css", s.handleCSS).Name("styles-css")
 	router.PathPrefix("/static").Handler(http.StripPrefix("/static/", http.FileServer(http.FS(poker.AssetFS(s.env))))).Name("static")
 
 	authed := router.NewRoute().Subrouter()
 	authed.Use(s.auth)
 	authed.HandleFunc("/dashboard", s.handleDashboard).Name("dashboard")
 	authed.HandleFunc("/dashboard/timers", s.handleDashboardTimers).Name("dashboard-timers")
-	authed.HandleFunc("/dashboard/timers/{timerID}", s.handleGetDashboardTimer).Methods(http.MethodGet).Name("dashboard-timer")
+	authed.HandleFunc("/dashboard/timers/new", func(w http.ResponseWriter, r *http.Request) {
+		map[string]http.HandlerFunc{
+			http.MethodGet:  s.handleGetDashboardTimerNew,
+			http.MethodPost: s.handlePostDashboardTimerNew,
+		}[r.Method](w, r)
+	}).Name("dashboard-timers-new")
 
-	partials := router.NewRoute().Subrouter()
-	partials.Use(s.auth)
-	partials.Use(func(h http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			hxRequestHeader := r.Header.Get("HX-Request")
-			if hxRequestHeader != "true" {
-				s.logger.Error("Required Header HX-Request missing from request")
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
+	authed.HandleFunc("/dashboard/timers/{timerID}", func(w http.ResponseWriter, r *http.Request) {
+		map[string]http.HandlerFunc{
+			http.MethodGet:    s.handleGetDashboardTimer,
+			http.MethodDelete: s.handleDeleteDashboardTimer,
+		}[r.Method](w, r)
+	}).Methods(http.MethodGet, http.MethodDelete).Name("dashboard-timer")
 
-			h.ServeHTTP(w, r)
+	authed.HandleFunc("/play/{timerID}", func(w http.ResponseWriter, r *http.Request) {
+		map[string]http.HandlerFunc{
+			http.MethodGet: s.handleGetPlayTimer,
+		}[r.Method](w, r)
+	}).Methods(http.MethodGet, http.MethodDelete).Name("play-timer")
 
-		})
-	})
+	authed.HandleFunc("/dashboard/timers/{timerID}/levels/new", func(w http.ResponseWriter, r *http.Request) {
+		map[string]http.HandlerFunc{
+			http.MethodGet:  s.handleGetDashboardTimerLevelNew,
+			http.MethodPost: s.handlePostDashboardTimerLevelNew,
+		}[r.Method](w, r)
+	}).Methods(http.MethodGet, http.MethodPost).Name("dashboard-timer-levels")
 
-	partials.HandleFunc("/partials/dashboard/timers/new", s.handleGetPartialDashboardNewTimer).Methods(http.MethodGet).Name("partials-dashboard-timers-new")
-	partials.HandleFunc("/partials/dashboard/timers/new", s.handlePostPartialDashboardNewTimer).Methods(http.MethodPost)
-
-	partials.HandleFunc("/partials/dashboard/timers", s.handlePartialDashboardTimers).
-		Methods(http.MethodGet).Name("partials-dashboard-timers")
-
-	partials.HandleFunc("/partials/dashboard/timers/{timerID}", s.handleGetPartialDashboardTimer).
-		Methods(http.MethodGet).Name("partials-dashboard-timer")
-
-	partials.HandleFunc("/partials/dashboard/timers/{timerID}", s.handleDeletePartialDashboardTimer).
-		Methods(http.MethodDelete).Name("partials-dashboard-timer")
-
-	partials.HandleFunc("/partials/dashboard/timers/{timerID}/levels/{levelType}", s.handleGetPartialDashboardTimerLevel).
-		Methods(http.MethodGet).Name("partials-dashboard-timer-level")
-	partials.HandleFunc("/partials/dashboard/timers/{timerID}/levels/{levelType}", s.handlePostPartialsDashboardTimerLevel).
-		Methods(http.MethodPost)
-	partials.HandleFunc("/partials/dashboard/timers/{timerID}/levels/{levelType}", s.handlePutPartialsDashboardTimerLevel).
-		Methods(http.MethodPut)
-
-	// Dashboard Standings
-	partials.HandleFunc("/partials/dashboard/standings", s.handlePartialDashboardStandings).Name("partials-dashboard-standings")
+	authed.HandleFunc("/dashboard/timers/{timerID}/levels/{levelID}", func(w http.ResponseWriter, r *http.Request) {
+		map[string]http.HandlerFunc{
+			http.MethodGet:    s.handleGetDashboardTimerLevelEdit,
+			http.MethodPost:   s.handlePostDashboardTimerLevelEdit,
+			http.MethodDelete: s.handleDeleteDashboardTimerLevel,
+		}[r.Method](w, r)
+	}).Methods(http.MethodGet, http.MethodPost, http.MethodDelete).Name("dashboard-timer-level")
 
 	return router
-}
-
-func (s *server) handleCSS(w http.ResponseWriter, r *http.Request) {
-
-	var ctx = r.Context()
-
-	buffer, err := s.templates.RenderStyles(ctx)
-	if err != nil {
-		s.logger.WithError(err).Error("failed to render styles")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("content-type", "text/css; charset=utf-8")
-	n, err := buffer.WriteTo(w)
-	if err != nil {
-		s.logger.WithError(err).Error("failed to write template to writer")
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-
-	s.logger.Debugf("wrote %d bytes", n)
-
 }
