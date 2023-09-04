@@ -14,7 +14,7 @@ type PlayProps struct {
 templ (s *Service) Play(ctx context.Context, props *PlayProps) {
 	<html lang="en">
 		@s.top()
-		<body>@s.navbar(ctx, props.User) @s.TimerMasthead(props.Timer, props.Level, props.CurrentLevel) @s.bottom()</body>
+		<body>@s.navbar(ctx, props.User) @s.TimerMasthead(props.Timer, props.Level, props.CurrentLevel) @s.bottom() @s.setCountdownData()</body>
 	</html>
 }
 
@@ -27,7 +27,11 @@ templ (s *Service) TimerMasthead(timer *poker.Timer, level *poker.TimerLevel, cu
 				<div class="row">
 					<div class="col">
 						<div class="timer-container d-flex justify-content-center align-items-center">
-							<div id="timer" class="timer-large-font" data-level-duration-sec={ format(level.DurationSec) }>{ level.DurationStr }</div>
+							if timer.IsComplete {
+								<div id="timer" class="timer-complete-font">Timer Complete</div>
+							} else {
+								<div id="timer" class="timer-large-font" data-level-duration-sec={ format(level.DurationSec) }>{ level.DurationStr }</div>
+							}
 						</div>
 					</div>
 				</div>
@@ -54,10 +58,9 @@ templ (s *Service) TimerMasthead(timer *poker.Timer, level *poker.TimerLevel, cu
 						</div>
 						<div class="row">
 							<div class="col flex-row mt-2 text-center">
-								<i class="fa-solid fa-angles-left fa-3x px-1"></i>
-								<i class="fa-solid fa-angle-left fa-3x px-1"></i>
-								<i id="trigger-next-timer-level" hx-get={ s.buildRoute("play-timer-next-level", "timerID", level.TimerID) } class="fa-solid fa-angles-right fa-3x px-1"></i>
-							</div>
+							<i id="trigger-previous-timer-level" hx-get={ s.buildRoute("play-timer-previous-level", "timerID", level.TimerID) } class="fa-solid fa-angles-left fa-3x "></i> 
+							<i id="trigger-reset-timer-level" hx-get={ s.buildRoute("play-timer-reset-level", "timerID", level.TimerID) } class="fa-solid fa-arrow-rotate-left fa-3x "></i> 
+							<i id="trigger-next-timer-level" hx-get={ s.buildRoute("play-timer-next-level", "timerID", level.TimerID) } class="fa-solid fa-angles-right fa-3x "></i></div>
 						</div>
 					</div>
 					<div class="col-5">
@@ -66,7 +69,9 @@ templ (s *Service) TimerMasthead(timer *poker.Timer, level *poker.TimerLevel, cu
 								<h1>
 									Current Blinds
 									<hr/>
-									{ format(level.SmallBlind) }/{ format(level.BigBlind) }
+									{ format(level.SmallBlind) }
+									/
+									{ format(level.BigBlind) }
 								</h1>
 							</div>
 						</div>
@@ -74,7 +79,6 @@ templ (s *Service) TimerMasthead(timer *poker.Timer, level *poker.TimerLevel, cu
 				</div>
 			</div>
 		</div>
-		@s.setCountdownData()
 	</div>
 }
 

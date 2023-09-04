@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"poker/internal"
 	"poker/internal/templates"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -48,6 +49,52 @@ func (s *server) handleGetPlayTimer(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func (s *server) handleGetPlayTimerResetLevel(w http.ResponseWriter, r *http.Request) {
+
+	var ctx = r.Context()
+
+	vars := mux.Vars(r)
+
+	timerID, ok := vars["timerID"]
+	if !ok {
+		s.logger.Error("var timerID missing from request context")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	timer, err := s.timerRepo.Timer(ctx, timerID)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to fetch timer")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	timer.IsComplete = false
+
+	err = s.timerRepo.SaveTimer(ctx, timer)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to save timer")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	level := timer.Levels[timer.CurrentLevel]
+
+	level.DurationStr = formatDuration(int(level.DurationSec))
+
+	w.Header().Set("HX-Trigger-After-Settle", "countdown::reset")
+	err = s.templates.TimerMasthead(
+		timer,
+		level,
+		timer.CurrentLevel+1,
+	).Render(ctx, w)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to render dashboard timer")
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+}
+
 func (s *server) handleGetPlayTimerNextLevel(w http.ResponseWriter, r *http.Request) {
 
 	var ctx = r.Context()
@@ -71,7 +118,16 @@ func (s *server) handleGetPlayTimerNextLevel(w http.ResponseWriter, r *http.Requ
 	level := timer.Levels[timer.CurrentLevel]
 
 	if timer.CurrentLevel == uint(len(timer.Levels)-1) {
-		level.DurationStr = "All Done!!"
+
+		timer.IsComplete = true
+
+		err = s.timerRepo.SaveTimer(ctx, timer)
+		if err != nil {
+			s.logger.WithError(err).Error("failed to save timer")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
 		err = s.templates.TimerMasthead(
 			timer,
 			level,
@@ -85,7 +141,7 @@ func (s *server) handleGetPlayTimerNextLevel(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// timer.CurrentLevel += 1
+	timer.CurrentLevel += 1
 
 	err = s.timerRepo.SaveTimer(ctx, timer)
 	if err != nil {
@@ -97,6 +153,84 @@ func (s *server) handleGetPlayTimerNextLevel(w http.ResponseWriter, r *http.Requ
 	level = timer.Levels[timer.CurrentLevel]
 
 	level.DurationStr = formatDuration(int(level.DurationSec))
+
+	var proceed = false
+	proceedStr := r.URL.Query().Get("proceed")
+	if proceedStr != "" {
+		parsedProceed, err := strconv.ParseBool(proceedStr)
+		if err == nil {
+			proceed = parsedProceed
+		}
+	}
+
+	if proceed {
+		w.Header().Set("HX-Trigger-After-Settle", "countdown::proceed")
+	} else {
+		w.Header().Set("HX-Trigger-After-Settle", "countdown::reset")
+	}
+	err = s.templates.TimerMasthead(
+		timer,
+		level,
+		timer.CurrentLevel+1,
+	).Render(ctx, w)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to render dashboard timer")
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+}
+
+func (s *server) handleGetPlayTimerPreviousLevel(w http.ResponseWriter, r *http.Request) {
+
+	var ctx = r.Context()
+
+	vars := mux.Vars(r)
+
+	timerID, ok := vars["timerID"]
+	if !ok {
+		s.logger.Error("var timerID missing from request context")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	timer, err := s.timerRepo.Timer(ctx, timerID)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to fetch timer")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	level := timer.Levels[timer.CurrentLevel]
+
+	if timer.CurrentLevel == 0 {
+		err = s.templates.TimerMasthead(
+			timer,
+			level,
+			timer.CurrentLevel,
+		).Render(ctx, w)
+		if err != nil {
+			s.logger.WithError(err).Error("failed to render dashboard timer")
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+		return
+	}
+
+	timer.CurrentLevel -= 1
+	timer.IsComplete = false
+
+	err = s.timerRepo.SaveTimer(ctx, timer)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to save timer")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	level = timer.Levels[timer.CurrentLevel]
+
+	level.DurationStr = formatDuration(int(level.DurationSec))
+
+	w.Header().Set("HX-Trigger-After-Settle", "countdown::reset")
 	err = s.templates.TimerMasthead(
 		timer,
 		level,

@@ -1,12 +1,14 @@
 .banner {
-    height: 100vh;
+    height: calc(100vh - 56px);
     width: 100vw;
     position: relative;
     overflow: hidden;
     background-size: cover !important;
     background-image: url("/static/images/check-cards.jpeg");
-    z-index: -1;
+    z-index: 1;
 }
+
+
 
 .overlay {
     position: absolute;
@@ -27,8 +29,14 @@
 }
 
 .timer-large-font {
-    display: inline-block;
     height: 400px;
-    font-size: 300px;
+    font-size: 10vw;
+    line-height: 400px;
+}
+
+
+.timer-complete-font {
+    height: 400px;
+    font-size: 5vw;
     line-height: 400px;
 }

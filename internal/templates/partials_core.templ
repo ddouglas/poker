@@ -23,12 +23,13 @@ templ (s *Service) bottom() {
 
 templ (s *Service) htmxDebug() {
 	<script>
-	htmx.logger = function (elt, event, data) {
-		if (console) {
-			console.log(event, elt, data);
+		htmx.logger = function (elt, event, data) {
+			if (event != "htmx:load") return
+			if (console) {
+				console.log(event,elt.nodeName, elt, data);
+			}
 		}
-	}
-</script>
+	</script>
 }
 
 templ (s *Service) navbar(ctx context.Context, user *poker.User) {

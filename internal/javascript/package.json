@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc countdown.ts --outFile ../../assets/js/countdown.js"
+    "build": "esbuild src/main.ts --bundle --sourcemap --target=es2020 --outfile=../../assets/js/countdown.js",
+    "watch": "esbuild src/main.ts --bundle --sourcemap --target=es2020 --outfile=../../assets/js/countdown.js --watch"
   },
   "repository": {
     "type": "git",
@@ -17,6 +18,10 @@
   },
   "homepage": "https://github.com/ddouglas/poker#readme",
   "devDependencies": {
+    "ts-loader": "^9.4.4",
     "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "esbuild": "0.19.2"
   }
 }

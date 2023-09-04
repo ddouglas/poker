@@ -137,11 +137,23 @@ func (s *server) buildRouter() *mux.Router {
 		}[r.Method](w, r)
 	}).Methods(http.MethodGet, http.MethodDelete).Name("play-timer")
 
+	authed.HandleFunc("/play/{timerID}/levels/reset", func(w http.ResponseWriter, r *http.Request) {
+		map[string]http.HandlerFunc{
+			http.MethodGet: s.handleGetPlayTimerResetLevel,
+		}[r.Method](w, r)
+	}).Methods(http.MethodGet, http.MethodDelete).Name("play-timer-reset-level")
+
 	authed.HandleFunc("/play/{timerID}/levels/next", func(w http.ResponseWriter, r *http.Request) {
 		map[string]http.HandlerFunc{
 			http.MethodGet: s.handleGetPlayTimerNextLevel,
 		}[r.Method](w, r)
 	}).Methods(http.MethodGet, http.MethodDelete).Name("play-timer-next-level")
+
+	authed.HandleFunc("/play/{timerID}/levels/previous", func(w http.ResponseWriter, r *http.Request) {
+		map[string]http.HandlerFunc{
+			http.MethodGet: s.handleGetPlayTimerPreviousLevel,
+		}[r.Method](w, r)
+	}).Methods(http.MethodGet, http.MethodDelete).Name("play-timer-previous-level")
 
 	authed.HandleFunc("/dashboard/timers/{timerID}/levels/new", func(w http.ResponseWriter, r *http.Request) {
 		map[string]http.HandlerFunc{

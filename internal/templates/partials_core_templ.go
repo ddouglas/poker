@@ -110,12 +110,13 @@ func (s *Service) htmxDebug() templ.Component {
 			return err
 		}
 		var_7 := `
-	htmx.logger = function (elt, event, data) {
-		if (console) {
-			console.log(event, elt, data);
+		htmx.logger = function (elt, event, data) {
+			if (event != "htmx:load") return
+			if (console) {
+				console.log(event,elt.nodeName, elt, data);
+			}
 		}
-	}
-`
+	`
 		_, err = templBuffer.WriteString(var_7)
 		if err != nil {
 			return err

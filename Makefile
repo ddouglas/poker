@@ -1,7 +1,10 @@
 profile ?= $(shell bash -c 'read -p "Profile: " profile; echo $$profile')
 
 countdown:
-	cd ./internal/javascript && npm run build
+	npm run --prefix internal/javascript build
+	
+watch:
+	npm run --prefix internal/javascript watch
 
 generate:
 	templ generate

@@ -10,6 +10,7 @@ type Timer struct {
 	Name         string
 	Levels       []*TimerLevel
 	CurrentLevel uint      `schema:"-"`
+	IsComplete   bool      `schema:"-"`
 	CreatedAt    time.Time `schema:"-"`
 	UpdatedAt    time.Time `schema:"-"`
 }

@@ -57,6 +57,10 @@ func (s *Service) Play(ctx context.Context, props *PlayProps) templ.Component {
 		if err != nil {
 			return err
 		}
+		err = s.setCountdownData().Render(ctx, templBuffer)
+		if err != nil {
+			return err
+		}
 		_, err = templBuffer.WriteString("</body></html>")
 		if err != nil {
 			return err
@@ -95,29 +99,53 @@ func (s *Service) TimerMasthead(timer *poker.Timer, level *poker.TimerLevel, cur
 		if err != nil {
 			return err
 		}
-		_, err = templBuffer.WriteString("</h1><hr><div class=\"row\"><div class=\"col\"><div class=\"timer-container d-flex justify-content-center align-items-center\"><div id=\"timer\" class=\"timer-large-font\" data-level-duration-sec=\"")
+		_, err = templBuffer.WriteString("</h1><hr><div class=\"row\"><div class=\"col\"><div class=\"timer-container d-flex justify-content-center align-items-center\">")
 		if err != nil {
 			return err
 		}
-		_, err = templBuffer.WriteString(templ.EscapeString(format(level.DurationSec)))
+		if timer.IsComplete {
+			_, err = templBuffer.WriteString("<div id=\"timer\" class=\"timer-complete-font\">")
+			if err != nil {
+				return err
+			}
+			var_5 := `Timer Complete`
+			_, err = templBuffer.WriteString(var_5)
+			if err != nil {
+				return err
+			}
+			_, err = templBuffer.WriteString("</div>")
+			if err != nil {
+				return err
+			}
+		} else {
+			_, err = templBuffer.WriteString("<div id=\"timer\" class=\"timer-large-font\" data-level-duration-sec=\"")
+			if err != nil {
+				return err
+			}
+			_, err = templBuffer.WriteString(templ.EscapeString(format(level.DurationSec)))
+			if err != nil {
+				return err
+			}
+			_, err = templBuffer.WriteString("\">")
+			if err != nil {
+				return err
+			}
+			var var_6 string = level.DurationStr
+			_, err = templBuffer.WriteString(templ.EscapeString(var_6))
+			if err != nil {
+				return err
+			}
+			_, err = templBuffer.WriteString("</div>")
+			if err != nil {
+				return err
+			}
+		}
+		_, err = templBuffer.WriteString("</div></div></div><div class=\"row mt-2\"><div class=\"col\"><hr></div></div><div class=\"row mt-2\"><div class=\"col-5\"><div class=\"d-flex justify-content-center\"><div class=\"text-center\"><h1>")
 		if err != nil {
 			return err
 		}
-		_, err = templBuffer.WriteString("\">")
-		if err != nil {
-			return err
-		}
-		var var_5 string = level.DurationStr
-		_, err = templBuffer.WriteString(templ.EscapeString(var_5))
-		if err != nil {
-			return err
-		}
-		_, err = templBuffer.WriteString("</div></div></div></div><div class=\"row mt-2\"><div class=\"col\"><hr></div></div><div class=\"row mt-2\"><div class=\"col-5\"><div class=\"d-flex justify-content-center\"><div class=\"text-center\"><h1>")
-		if err != nil {
-			return err
-		}
-		var_6 := `Current Level:`
-		_, err = templBuffer.WriteString(var_6)
+		var_7 := `Current Level:`
+		_, err = templBuffer.WriteString(var_7)
 		if err != nil {
 			return err
 		}
@@ -125,12 +153,28 @@ func (s *Service) TimerMasthead(timer *poker.Timer, level *poker.TimerLevel, cur
 		if err != nil {
 			return err
 		}
-		var var_7 string = format(timer.CurrentLevel)
-		_, err = templBuffer.WriteString(templ.EscapeString(var_7))
+		var var_8 string = format(timer.CurrentLevel)
+		_, err = templBuffer.WriteString(templ.EscapeString(var_8))
 		if err != nil {
 			return err
 		}
-		_, err = templBuffer.WriteString("</h1></div></div></div><div class=\"col-2\"><div class=\"row\"><div class=\"col text-center\"><i id=\"toggle-timer-button\" class=\"fa-solid fa-circle-play fa-5x\"></i></div></div><div class=\"row\"><div class=\"col flex-row mt-2 text-center\"><i class=\"fa-solid fa-angles-left fa-3x px-1\"></i><i class=\"fa-solid fa-angle-left fa-3x px-1\"></i><i id=\"trigger-next-timer-level\" hx-get=\"")
+		_, err = templBuffer.WriteString("</h1></div></div></div><div class=\"col-2\"><div class=\"row\"><div class=\"col text-center\"><i id=\"toggle-timer-button\" class=\"fa-solid fa-circle-play fa-5x\"></i></div></div><div class=\"row\"><div class=\"col flex-row mt-2 text-center\"><i id=\"trigger-previous-timer-level\" hx-get=\"")
+		if err != nil {
+			return err
+		}
+		_, err = templBuffer.WriteString(templ.EscapeString(s.buildRoute("play-timer-previous-level", "timerID", level.TimerID)))
+		if err != nil {
+			return err
+		}
+		_, err = templBuffer.WriteString("\" class=\"fa-solid fa-angles-left fa-3x \"></i><i id=\"trigger-reset-timer-level\" hx-get=\"")
+		if err != nil {
+			return err
+		}
+		_, err = templBuffer.WriteString(templ.EscapeString(s.buildRoute("play-timer-reset-level", "timerID", level.TimerID)))
+		if err != nil {
+			return err
+		}
+		_, err = templBuffer.WriteString("\" class=\"fa-solid fa-arrow-rotate-left fa-3x \"></i><i id=\"trigger-next-timer-level\" hx-get=\"")
 		if err != nil {
 			return err
 		}
@@ -138,12 +182,12 @@ func (s *Service) TimerMasthead(timer *poker.Timer, level *poker.TimerLevel, cur
 		if err != nil {
 			return err
 		}
-		_, err = templBuffer.WriteString("\" class=\"fa-solid fa-angles-right fa-3x px-1\"></i></div></div></div><div class=\"col-5\"><div class=\"d-flex justify-content-center\"><div class=\"text-center\"><h1>")
+		_, err = templBuffer.WriteString("\" class=\"fa-solid fa-angles-right fa-3x \"></i></div></div></div><div class=\"col-5\"><div class=\"d-flex justify-content-center\"><div class=\"text-center\"><h1>")
 		if err != nil {
 			return err
 		}
-		var_8 := `Current Blinds`
-		_, err = templBuffer.WriteString(var_8)
+		var_9 := `Current Blinds`
+		_, err = templBuffer.WriteString(var_9)
 		if err != nil {
 			return err
 		}
@@ -151,30 +195,30 @@ func (s *Service) TimerMasthead(timer *poker.Timer, level *poker.TimerLevel, cur
 		if err != nil {
 			return err
 		}
-		var var_9 string = format(level.SmallBlind)
-		_, err = templBuffer.WriteString(templ.EscapeString(var_9))
+		var var_10 string = format(level.SmallBlind)
+		_, err = templBuffer.WriteString(templ.EscapeString(var_10))
 		if err != nil {
 			return err
 		}
-		var_10 := `/`
-		_, err = templBuffer.WriteString(var_10)
+		_, err = templBuffer.WriteString(" ")
 		if err != nil {
 			return err
 		}
-		var var_11 string = format(level.BigBlind)
-		_, err = templBuffer.WriteString(templ.EscapeString(var_11))
+		var_11 := `/`
+		_, err = templBuffer.WriteString(var_11)
 		if err != nil {
 			return err
 		}
-		_, err = templBuffer.WriteString("</h1></div></div></div></div></div></div>")
+		_, err = templBuffer.WriteString(" ")
 		if err != nil {
 			return err
 		}
-		err = s.setCountdownData().Render(ctx, templBuffer)
+		var var_12 string = format(level.BigBlind)
+		_, err = templBuffer.WriteString(templ.EscapeString(var_12))
 		if err != nil {
 			return err
 		}
-		_, err = templBuffer.WriteString("</div>")
+		_, err = templBuffer.WriteString("</h1></div></div></div></div></div></div></div>")
 		if err != nil {
 			return err
 		}

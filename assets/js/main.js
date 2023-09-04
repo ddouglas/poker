@@ -12,14 +12,17 @@
       this.interval = null;
     }
     decrementCountdown() {
+      console.debug("Countdown.decrementCountdown() start");
       this.countdownValue--;
       this.emitter(this.format(this.countdownValue));
       if (this.countdownValue === 0) {
         this.stop();
         this.onComplete();
       }
+      console.debug("Countdown.decrementCountdown() stop");
     }
     format(duration) {
+      console.debug("Countdown.format() start");
       const parts = {
         hours: Math.floor(duration / (60 * 60) % 24),
         minutes: Math.floor(duration / 60 % 60),
@@ -53,6 +56,7 @@
         bit = `${bit}${parts.seconds}`;
         bits.push(bit);
       }
+      console.debug("Countdown.format() stop");
       return bits.join(":");
     }
     start() {
@@ -69,16 +73,15 @@
       console.debug("Countdown.start() this.interval");
       this.interval = setInterval(() => this.decrementCountdown(), 1e3);
       this.isRunning = true;
-      console.debug("Countdown.start() done", this.interval);
+      console.debug("Countdown.start() done");
     }
     continue() {
       this.stop();
       this.start();
     }
     stop() {
-      console.debug("Countdown.stop() start", this.interval);
+      console.debug("Countdown.stop() start");
       if (this.interval) {
-        console.debug("Countdown.stop() clearInterval");
         clearInterval(this.interval);
       }
       this.interval = null;
@@ -126,10 +129,10 @@
       console.error("failed to fetch trigger-next-timer-level element by id");
       return null;
     }
-    let nextLevelURI = nextTimerButton.getAttribute("hx-get");
+    const nextLevelURI = `${nextTimerButton.getAttribute("hx-get")}?continue=true`;
     if (!nextLevelURI) {
       console.error("trigger-next-timer-level element is missing attribute hx-get");
-      nextLevelURI = "";
+      return null;
     }
     let durationSecStr = timer.getAttribute("data-level-duration-sec");
     if (!durationSecStr) {
@@ -145,8 +148,7 @@
     abort = new AbortController();
   }
   initAbort();
-  document.addEventListener("DOMContentLoaded", () => {
-    console.log("DOM Ready");
+  document.body.addEventListener("htmx:load", () => {
     initCountdown();
     initTimerToggleEventClick();
   });
@@ -207,7 +209,7 @@
         console.debug(`received emitted value ${text}`);
       },
       onComplete: () => {
-        const nextLevelURIContinue = `${nextLevelURI}?proceed=true`;
+        const nextLevelURIContinue = `${nextLevelURI}?continue=true`;
         htmx.ajax(
           "GET",
           nextLevelURIContinue,
@@ -240,11 +242,7 @@
     console.debug("toggleCountdown :: complete");
   }
   function stopCountdown() {
-    if (!countdown) {
-      console.error("failed to stop countdown, countdown is undefined", countdown);
-      return;
-    }
-    countdown.stop();
+    countdown?.stop();
     const elements = fetchElements();
     if (!elements) {
       console.error("failed to fetch elements, unable to register click event on timer toggle");
@@ -266,4 +264,4 @@
     countdown?.start();
   }
 })();
-//# sourceMappingURL=countdown.js.map
+//# sourceMappingURL=main.js.map
