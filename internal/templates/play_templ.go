@@ -10,14 +10,14 @@ import "io"
 import "bytes"
 
 import (
-	"fmt"
 	"poker"
-	"time"
 )
 
 type PlayProps struct {
-	User  *poker.User
-	Timer *poker.Timer
+	User         *poker.User
+	Timer        *poker.Timer
+	Level        *poker.TimerLevel
+	CurrentLevel uint
 }
 
 func (s *Service) Play(ctx context.Context, props *PlayProps) templ.Component {
@@ -49,57 +49,96 @@ func (s *Service) Play(ctx context.Context, props *PlayProps) templ.Component {
 		if err != nil {
 			return err
 		}
-		_, err = templBuffer.WriteString("<div class=\"container\"><div class=\"row\"><div class=\"col-10 offset-1\"><h1 class=\"text-center\">")
+		err = s.TimerMasthead(props.Timer, props.Level, props.CurrentLevel).Render(ctx, templBuffer)
 		if err != nil {
 			return err
 		}
-		var_2 := `Timer `
-		_, err = templBuffer.WriteString(var_2)
+		err = s.bottom().Render(ctx, templBuffer)
 		if err != nil {
 			return err
 		}
-		var var_3 string = props.Timer.Name
-		_, err = templBuffer.WriteString(templ.EscapeString(var_3))
+		_, err = templBuffer.WriteString("</body></html>")
 		if err != nil {
 			return err
 		}
-		_, err = templBuffer.WriteString("</h1><hr><div class=\"row\"><div class=\"col\"><div class=\"timer-container d-flex justify-content-center align-items-center\"><div id=\"timer\" class=\"timer-large-font\">")
+		if !templIsBuffer {
+			_, err = io.Copy(w, templBuffer)
+		}
+		return err
+	})
+}
+
+func (s *Service) TimerMasthead(timer *poker.Timer, level *poker.TimerLevel, currentLevel uint) templ.Component {
+	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) (err error) {
+		templBuffer, templIsBuffer := w.(*bytes.Buffer)
+		if !templIsBuffer {
+			templBuffer = templ.GetBuffer()
+			defer templ.ReleaseBuffer(templBuffer)
+		}
+		ctx = templ.InitializeContext(ctx)
+		var_2 := templ.GetChildren(ctx)
+		if var_2 == nil {
+			var_2 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		_, err = templBuffer.WriteString("<div id=\"timer-container\" class=\"container\" hx-swap-oob=\"true\"><div class=\"row\"><div class=\"col-10 offset-1\"><h1 class=\"text-center\">")
 		if err != nil {
 			return err
 		}
-		var_4 := `00:00`
-		_, err = templBuffer.WriteString(var_4)
+		var_3 := `Timer `
+		_, err = templBuffer.WriteString(var_3)
 		if err != nil {
 			return err
 		}
-		_, err = templBuffer.WriteString("</div></div></div></div><div class=\"row\"><div class=\"col-5\"><div class=\"d-flex justify-content-center\"><div class=\"text-center\"><h1>")
+		var var_4 string = timer.Name
+		_, err = templBuffer.WriteString(templ.EscapeString(var_4))
 		if err != nil {
 			return err
 		}
-		var_5 := `Current Level:`
-		_, err = templBuffer.WriteString(var_5)
+		_, err = templBuffer.WriteString("</h1><hr><div class=\"row\"><div class=\"col\"><div class=\"timer-container d-flex justify-content-center align-items-center\"><div id=\"timer\" class=\"timer-large-font\" data-level-duration-sec=\"")
 		if err != nil {
 			return err
 		}
-		_, err = templBuffer.WriteString("<br>")
+		_, err = templBuffer.WriteString(templ.EscapeString(format(level.DurationSec)))
 		if err != nil {
 			return err
 		}
-		var_6 := `1`
+		_, err = templBuffer.WriteString("\">")
+		if err != nil {
+			return err
+		}
+		var var_5 string = level.DurationStr
+		_, err = templBuffer.WriteString(templ.EscapeString(var_5))
+		if err != nil {
+			return err
+		}
+		_, err = templBuffer.WriteString("</div></div></div></div><div class=\"row mt-2\"><div class=\"col\"><hr></div></div><div class=\"row mt-2\"><div class=\"col-5\"><div class=\"d-flex justify-content-center\"><div class=\"text-center\"><h1>")
+		if err != nil {
+			return err
+		}
+		var_6 := `Current Level:`
 		_, err = templBuffer.WriteString(var_6)
 		if err != nil {
 			return err
 		}
-		_, err = templBuffer.WriteString("</h1></div></div></div><div class=\"col-2\"><button id=\"toggle-timer\" class=\"btn btn-primary\">")
+		_, err = templBuffer.WriteString(" <hr>")
 		if err != nil {
 			return err
 		}
-		var_7 := `Play`
-		_, err = templBuffer.WriteString(var_7)
+		var var_7 string = format(timer.CurrentLevel)
+		_, err = templBuffer.WriteString(templ.EscapeString(var_7))
 		if err != nil {
 			return err
 		}
-		_, err = templBuffer.WriteString("</button></div><div class=\"col-5\"><div class=\"d-flex justify-content-center\"><div class=\"text-center\"><h1>")
+		_, err = templBuffer.WriteString("</h1></div></div></div><div class=\"col-2\"><div class=\"row\"><div class=\"col text-center\"><i id=\"toggle-timer-button\" class=\"fa-solid fa-circle-play fa-5x\"></i></div></div><div class=\"row\"><div class=\"col flex-row mt-2 text-center\"><i class=\"fa-solid fa-angles-left fa-3x px-1\"></i><i class=\"fa-solid fa-angle-left fa-3x px-1\"></i><i id=\"trigger-next-timer-level\" hx-get=\"")
+		if err != nil {
+			return err
+		}
+		_, err = templBuffer.WriteString(templ.EscapeString(s.buildRoute("play-timer-next-level", "timerID", level.TimerID)))
+		if err != nil {
+			return err
+		}
+		_, err = templBuffer.WriteString("\" class=\"fa-solid fa-angles-right fa-3x px-1\"></i></div></div></div><div class=\"col-5\"><div class=\"d-flex justify-content-center\"><div class=\"text-center\"><h1>")
 		if err != nil {
 			return err
 		}
@@ -108,45 +147,34 @@ func (s *Service) Play(ctx context.Context, props *PlayProps) templ.Component {
 		if err != nil {
 			return err
 		}
-		_, err = templBuffer.WriteString("<br>")
+		_, err = templBuffer.WriteString(" <hr>")
 		if err != nil {
 			return err
 		}
-		var_9 := `100/200`
-		_, err = templBuffer.WriteString(var_9)
+		var var_9 string = format(level.SmallBlind)
+		_, err = templBuffer.WriteString(templ.EscapeString(var_9))
 		if err != nil {
 			return err
 		}
-		_, err = templBuffer.WriteString("</h1></div></div></div></div></div></div></div>")
-		if err != nil {
-			return err
-		}
-		err = s.bottom().Render(ctx, templBuffer)
-		if err != nil {
-			return err
-		}
-		err = s.setCountdownData(props.Timer.Levels).Render(ctx, templBuffer)
-		if err != nil {
-			return err
-		}
-		_, err = templBuffer.WriteString("<script src=\"")
-		if err != nil {
-			return err
-		}
-		_, err = templBuffer.WriteString(templ.EscapeString(fmt.Sprintf("%s/js/countdown.js?v=%d", s.buildRoute("static"), time.Now().Unix())))
-		if err != nil {
-			return err
-		}
-		_, err = templBuffer.WriteString("\">")
-		if err != nil {
-			return err
-		}
-		var_10 := ``
+		var_10 := `/`
 		_, err = templBuffer.WriteString(var_10)
 		if err != nil {
 			return err
 		}
-		_, err = templBuffer.WriteString("</script></body></html>")
+		var var_11 string = format(level.BigBlind)
+		_, err = templBuffer.WriteString(templ.EscapeString(var_11))
+		if err != nil {
+			return err
+		}
+		_, err = templBuffer.WriteString("</h1></div></div></div></div></div></div>")
+		if err != nil {
+			return err
+		}
+		err = s.setCountdownData().Render(ctx, templBuffer)
+		if err != nil {
+			return err
+		}
+		_, err = templBuffer.WriteString("</div>")
 		if err != nil {
 			return err
 		}

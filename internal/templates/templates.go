@@ -2,11 +2,11 @@ package templates
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"poker"
 	"poker/internal/store/dynamo"
+	"time"
 
 	"github.com/a-h/templ"
 	"github.com/sirupsen/logrus"
@@ -62,22 +62,23 @@ func (s *Service) buildRoute(name string, args ...any) string {
 	return route
 }
 
-func (s *Service) setCountdownData(levels []*poker.TimerLevel) templ.Component {
+func (s *Service) setCountdownData() templ.Component {
+
+	var scriptURI = fmt.Sprintf("%s/js/countdown.js?v=%d", s.buildRoute("static"), time.Now().Unix())
 
 	const javascriptData = `
-		<script>
-			const countdownServerData = JSON.parse('%v');
-		</script>
+		<script src='%s'></script>
 	`
 
 	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
 
-		data, err := json.Marshal(levels)
-		if err != nil {
-			return err
-		}
+		s := fmt.Sprintf(
+			javascriptData,
+			scriptURI,
+		)
 
-		_, err = io.WriteString(w, fmt.Sprintf(javascriptData, string(data)))
+		_, err := io.WriteString(w, s)
 		return err
+
 	})
 }

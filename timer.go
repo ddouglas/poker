@@ -5,12 +5,13 @@ import (
 )
 
 type Timer struct {
-	ID        string `schema:"-"`
-	UserID    string `schema:"-"`
-	Name      string
-	Levels    []*TimerLevel
-	CreatedAt time.Time `schema:"-"`
-	UpdatedAt time.Time `schema:"-"`
+	ID           string `schema:"-"`
+	UserID       string `schema:"-"`
+	Name         string
+	Levels       []*TimerLevel
+	CurrentLevel uint      `schema:"-"`
+	CreatedAt    time.Time `schema:"-"`
+	UpdatedAt    time.Time `schema:"-"`
 }
 
 type TimerType string
@@ -39,10 +40,13 @@ type TimerLevel struct {
 	ID          string
 	Type        TimerType
 	TimerID     string
-	Level       uint
-	SmallBlind  uint
-	BigBlind    uint
-	Ante        uint
-	DurationMin uint
-	DurationSec uint
+	Level       float64
+	SmallBlind  float64
+	BigBlind    float64
+	Ante        float64
+	DurationMin float64
+	DurationSec float64
+	// DurationStr is a the string representation of the remaining time in the MM:SS format
+	DurationStr string
+	ShowHours   bool
 }

@@ -391,6 +391,9 @@ func (s *server) handlePostDashboardTimerLevelEdit(w http.ResponseWriter, r *htt
 		return
 	}
 
+	level.DurationSec = level.DurationMin * 60
+	level.DurationStr = ""
+
 	err = s.timerRepo.SaveTimer(ctx, timer)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to save timer")

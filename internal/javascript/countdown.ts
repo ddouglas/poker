@@ -2,20 +2,23 @@ interface CountdownOpts {
     initialValue: number
     showHour: boolean
     emitter: (current: string) => void
+    onComplete: () => void
 }
 
 class Countdown {
-    initialValue: number
-    showHour: boolean
-    isRunning: boolean = false
-    emitter: (current: string) => void
+    private initialValue: number
+    private showHour: boolean
+    private isRunning: boolean = false
+    private emitter: (current: string) => void
+    private onComplete: () => void
     private countdownValue: number;
     private interval: number | null;
 
-    constructor({ initialValue, showHour, emitter }: CountdownOpts) {
+    constructor({ initialValue, showHour, emitter, onComplete }: CountdownOpts) {
         this.initialValue = initialValue;
         this.showHour = showHour;
         this.emitter = emitter;
+        this.onComplete = onComplete;
         this.countdownValue = initialValue;
         this.interval = null;
     }
@@ -26,6 +29,7 @@ class Countdown {
         this.emitter(this.format(this.countdownValue))
         if (this.countdownValue === 0) {
             this.stop();
+            this.onComplete();
         }
     }
 
@@ -97,7 +101,10 @@ class Countdown {
     public toggle() {
         this.isRunning ? this.stop() : this.start()
         return
+    }
 
+    public getIsRunning() {
+        return this.isRunning
     }
 
     public reset() {
@@ -106,16 +113,116 @@ class Countdown {
     }
 }
 
-declare var countdownServerData: any
+declare var htmx: any
 
-document.body.addEventListener("htmx:load", function () {
+let cd: Countdown | null
+let timerContainer = document.getElementById('timer-container')
+let timer = document.getElementById('timer')
+let timerToggle = document.getElementById("toggle-timer-button")
+let nextTimerButton = document.getElementById("trigger-next-timer-level")
 
-    console.log("countdownServerData from countdown.js", countdownServerData)
+function bootstrap() {
+    if (!timerContainer) {
+        console.error("Failed to fetch timer-container by id")
+        return
+    }
 
-    console.log("event listener from countdown.js");
+    if (!timer) {
+        console.error("failed to fetch timer element by id")
+        return
+    }
+
+    if (!timerToggle) {
+        console.error("failed to fetch toggle-timer-button element by id")
+        return
+    }
+    if (!nextTimerButton) {
+        console.error("failed to fetch trigger-next-timer-level element by id")
+        return
+    }
+
+    const nextLevelURI = nextTimerButton.getAttribute("hx-get")
+    if (!nextLevelURI) {
+        console.error("trigger-next-timer-level element is missing attribute hx-get")
+        return
+    }
+
+    const durationSecStr = timer.getAttribute("data-level-duration-sec")
+    if (!durationSecStr) {
+        console.error("trigger-next-timer-level element is missing attribute data-level-duration-sec")
+        return
+    }
+
+    const durationSec = parseInt(durationSecStr)
+
+    cd = new Countdown({
+        initialValue: durationSec,
+        showHour: false,
+        emitter: function (text: string) {
+            if (!timer) {
+                console.error("failed to fetch timer element by id")
+                return
+            }
+
+            timer.innerHTML = text
+            console.log(`Receiving Emitted Text ${text}`)
+        },
+        onComplete: function () {
+            htmx.ajax(
+                'GET',
+                nextLevelURI,
+                timerContainer
+            ).then(() => {
+                // timerToggle.removeEventListener("click", toggleTimerFunc)
+                // timerContainer.removeEventListener("htmx:afterSettle", cd.start)
+                console.log("Swapped in timer-container")
+            })
+
+            console.log("countdown is complete")
+        },
+    })
+
+    console.log("htmx:afterSettle timerContainer.addEventListener")
+    timerContainer.addEventListener("htmx:afterSettle", resetCD)
 
 
+}
 
 
-})
-// const countdown = new Countdown(10); 
+function toggleTimer() {
+    if (!cd) {
+        console.error("toggleTimer :: cd is not set yet")
+        return
+    }
+    cd.toggle()
+    if (!cd.getIsRunning()) {
+        htmx.removeClass(timerToggle, "fa-circle-stop")
+        htmx.addClass(timerToggle, "fa-circle-play")
+    } else {
+        htmx.removeClass(timerToggle, "fa-circle-play")
+        htmx.addClass(timerToggle, "fa-circle-stop")
+    }
+}
+
+function resetCD() {
+    if (!cd || !timerContainer) {
+        console.error("resetCD :: cd and/or timerContainer are not set yet")
+        return
+    }
+    // timerContainer.removeEventListener("htmx:afterSettle", resetCD)
+    // document.body.removeEventListener("htmx:load", bootstrap)
+
+    bootstrap()
+    console.log("cd.start()")
+    cd.start()
+}
+
+document.body.addEventListener("htmx:load", bootstrap)
+
+if (timerToggle) {
+    timerToggle.addEventListener("click", toggleTimer)
+}
+
+if (timerContainer) {
+    timerContainer.addEventListener("htmx:afterSettle", resetCD)
+}

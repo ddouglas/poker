@@ -27,5 +27,8 @@
 }
 
 .timer-large-font {
-    font-size: 200px;
+    display: inline-block;
+    height: 400px;
+    font-size: 300px;
+    line-height: 400px;
 }

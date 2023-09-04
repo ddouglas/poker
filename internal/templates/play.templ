@@ -1,58 +1,80 @@
 package templates
 
 import (
-"fmt"
 "poker"
-"time"
 )
 
 type PlayProps struct {
 	User *poker.User
 	Timer *poker.Timer
+	Level *poker.TimerLevel
+	CurrentLevel uint
 }
 
 templ (s *Service) Play(ctx context.Context, props *PlayProps) {
 	<html lang="en">
 		@s.top()
-		<body>
-			@s.navbar(ctx, props.User)
-			<div class="container">
+		<body>@s.navbar(ctx, props.User) @s.TimerMasthead(props.Timer, props.Level, props.CurrentLevel) @s.bottom()</body>
+	</html>
+}
+
+templ (s *Service) TimerMasthead(timer *poker.Timer, level *poker.TimerLevel, currentLevel uint) {
+	<div id="timer-container" class="container" hx-swap-oob="true">
+		<div class="row">
+			<div class="col-10 offset-1">
+				<h1 class="text-center">Timer { timer.Name }</h1>
+				<hr/>
 				<div class="row">
-					<div class="col-10 offset-1">
-						<h1 class="text-center">Timer { props.Timer.Name }</h1>
+					<div class="col">
+						<div class="timer-container d-flex justify-content-center align-items-center">
+							<div id="timer" class="timer-large-font" data-level-duration-sec={ format(level.DurationSec) }>{ level.DurationStr }</div>
+						</div>
+					</div>
+				</div>
+				<div class="row mt-2">
+					<div class="col">
 						<hr/>
-						<div class="row">
-							<div class="col">
-								<div class="timer-container d-flex justify-content-center align-items-center">
-									<div id="timer" class="timer-large-font">00:00</div>
-								</div>
+					</div>
+				</div>
+				<div class="row mt-2">
+					<div class="col-5">
+						<div class="d-flex justify-content-center">
+							<div class="text-center">
+								<h1>
+									Current Level:
+									<hr/>
+									{ format(timer.CurrentLevel) }
+								</h1>
 							</div>
 						</div>
+					</div>
+					<div class="col-2">
 						<div class="row">
-							<div class="col-5">
-								<div class="d-flex justify-content-center">
-									<div class="text-center">
-										<h1>Current Level:<br/>1</h1>
-									</div>
-								</div>
+							<div class="col text-center"><i id="toggle-timer-button" class="fa-solid fa-circle-play fa-5x"></i></div>
+						</div>
+						<div class="row">
+							<div class="col flex-row mt-2 text-center">
+								<i class="fa-solid fa-angles-left fa-3x px-1"></i>
+								<i class="fa-solid fa-angle-left fa-3x px-1"></i>
+								<i id="trigger-next-timer-level" hx-get={ s.buildRoute("play-timer-next-level", "timerID", level.TimerID) } class="fa-solid fa-angles-right fa-3x px-1"></i>
 							</div>
-							<div class="col-2"><button id="toggle-timer" class="btn btn-primary">Play</button></div>
-							<div class="col-5">
-								<div class="d-flex justify-content-center">
-									<div class="text-center">
-										<h1>Current Blinds<br/>100/200</h1>
-									</div>
-								</div>
+						</div>
+					</div>
+					<div class="col-5">
+						<div class="d-flex justify-content-center">
+							<div class="text-center">
+								<h1>
+									Current Blinds
+									<hr/>
+									{ format(level.SmallBlind) }/{ format(level.BigBlind) }
+								</h1>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-			@s.bottom()
-			@s.setCountdownData(props.Timer.Levels)
-			<script src={ fmt.Sprintf("%s/js/countdown.js?v=%d", s.buildRoute("static"), time.Now().Unix()) }></script>
-		</body>
-		
-	</html>
+		</div>
+		@s.setCountdownData()
+	</div>
 }
 
