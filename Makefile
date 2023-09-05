@@ -9,7 +9,7 @@ watch:
 generate:
 	templ generate
 
-run: generate 
+run:  
 	aws-vault exec --no-session ${profile} -- go run cmd/poker/*.go
 
 apply:

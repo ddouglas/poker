@@ -10,6 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression v1.4.66
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.21.5
 	github.com/coreos/go-oidc/v3 v3.6.0
+	github.com/davecgh/go-spew v1.1.1
 	github.com/ddouglas/dynastore v0.2.1
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0

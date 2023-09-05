@@ -3,7 +3,24 @@ package server
 import (
 	"net/http"
 	"poker/internal"
+	"time"
+
+	"github.com/sirupsen/logrus"
 )
+
+func (s *server) logging(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		start := time.Now()
+		entry := s.logger.WithFields(logrus.Fields{
+			"method": r.Method,
+			"path":   r.URL.String(),
+		})
+		handler.ServeHTTP(w, r)
+		entry.WithField("duration", time.Since(start)).Info("request")
+
+	})
+}
 
 func (s *server) user(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

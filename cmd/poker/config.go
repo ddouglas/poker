@@ -8,7 +8,8 @@ import (
 )
 
 var appConfig struct {
-	Auth0 struct {
+	AppURL string `envconfig:"APP_URL" required:"true"`
+	Auth0  struct {
 		CallbackURL  string `envconfig:"AUTH0_CALLBACK_URL" required:"true"`
 		ClientID     string `envconfig:"AUTH0_CLIENT_ID" required:"true"`
 		ClientSecret string `envconfig:"AUTH0_CLIENT_SECRET" required:"true"`

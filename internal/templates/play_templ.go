@@ -49,6 +49,10 @@ func (s *Service) Play(ctx context.Context, props *PlayProps) templ.Component {
 		if err != nil {
 			return err
 		}
+		err = s.breadcrumbs(s.newBreadcrumb("Dashboard", "dashboard"), s.newBreadcrumb("Timer", "dashboard-timer", "timerID", props.Timer.ID), s.newBreadcrumb(props.Timer.Name, "play-timer", "timerID", props.Timer.ID)).Render(ctx, templBuffer)
+		if err != nil {
+			return err
+		}
 		err = s.TimerMasthead(props.Timer, props.Level, props.CurrentLevel).Render(ctx, templBuffer)
 		if err != nil {
 			return err
@@ -153,7 +157,7 @@ func (s *Service) TimerMasthead(timer *poker.Timer, level *poker.TimerLevel, cur
 		if err != nil {
 			return err
 		}
-		var var_8 string = format(timer.CurrentLevel)
+		var var_8 string = format(currentLevel)
 		_, err = templBuffer.WriteString(templ.EscapeString(var_8))
 		if err != nil {
 			return err

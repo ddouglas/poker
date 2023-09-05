@@ -43,6 +43,10 @@ func (s *Service) Dashboard(ctx context.Context, user *poker.User) templ.Compone
 		if err != nil {
 			return err
 		}
+		err = s.breadcrumbs(s.newBreadcrumb("Dashboard", "dashboard")).Render(ctx, templBuffer)
+		if err != nil {
+			return err
+		}
 		_, err = templBuffer.WriteString("<div class=\"container\"><div class=\"row\"><div class=\"col\"><h1>")
 		if err != nil {
 			return err
@@ -183,7 +187,16 @@ func (s *Service) dashboardStandings() templ.Component {
 		if err != nil {
 			return err
 		}
-		_, err = templBuffer.WriteString("</h5><hr></div></div></div>")
+		_, err = templBuffer.WriteString("</h5><hr><h2 class=\"text-center\">")
+		if err != nil {
+			return err
+		}
+		var_12 := `Coming Soon`
+		_, err = templBuffer.WriteString(var_12)
+		if err != nil {
+			return err
+		}
+		_, err = templBuffer.WriteString("</h2></div></div></div>")
 		if err != nil {
 			return err
 		}
@@ -207,9 +220,9 @@ func (s *Service) DashboardTimers(ctx context.Context, props *DashboardTimersPro
 			defer templ.ReleaseBuffer(templBuffer)
 		}
 		ctx = templ.InitializeContext(ctx)
-		var_12 := templ.GetChildren(ctx)
-		if var_12 == nil {
-			var_12 = templ.NopComponent
+		var_13 := templ.GetChildren(ctx)
+		if var_13 == nil {
+			var_13 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		_, err = templBuffer.WriteString("<html lang=\"en\">")
@@ -224,17 +237,21 @@ func (s *Service) DashboardTimers(ctx context.Context, props *DashboardTimersPro
 		if err != nil {
 			return err
 		}
+		err = s.breadcrumbs(s.newBreadcrumb("Dashboard", "dashboard"), s.newBreadcrumb("Timers", "dashboard-timers")).Render(ctx, templBuffer)
+		if err != nil {
+			return err
+		}
 		_, err = templBuffer.WriteString("<div class=\"container\"><div class=\"row\"><div class=\"col\"><h1>")
 		if err != nil {
 			return err
 		}
-		var_13 := `Welcome `
-		_, err = templBuffer.WriteString(var_13)
+		var_14 := `Welcome `
+		_, err = templBuffer.WriteString(var_14)
 		if err != nil {
 			return err
 		}
-		var var_14 string = props.User.Name
-		_, err = templBuffer.WriteString(templ.EscapeString(var_14))
+		var var_15 string = props.User.Name
+		_, err = templBuffer.WriteString(templ.EscapeString(var_15))
 		if err != nil {
 			return err
 		}
@@ -281,9 +298,9 @@ func (s *Service) DashboardTimersFragment(ctx context.Context, timers []*poker.T
 			defer templ.ReleaseBuffer(templBuffer)
 		}
 		ctx = templ.InitializeContext(ctx)
-		var_15 := templ.GetChildren(ctx)
-		if var_15 == nil {
-			var_15 = templ.NopComponent
+		var_16 := templ.GetChildren(ctx)
+		if var_16 == nil {
+			var_16 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		err = s.dashboardTimers(ctx, timers).Render(ctx, templBuffer)
@@ -305,17 +322,17 @@ func (s *Service) dashboardTimers(ctx context.Context, timers []*poker.Timer) te
 			defer templ.ReleaseBuffer(templBuffer)
 		}
 		ctx = templ.InitializeContext(ctx)
-		var_16 := templ.GetChildren(ctx)
-		if var_16 == nil {
-			var_16 = templ.NopComponent
+		var_17 := templ.GetChildren(ctx)
+		if var_17 == nil {
+			var_17 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		_, err = templBuffer.WriteString("<div class=\"container\" id=\"dashboard-section\" hx-swap-oob=\"true\"><div class=\"row\"><div class=\"col\"><h5 class=\"text-center\">")
 		if err != nil {
 			return err
 		}
-		var_17 := `My Blind Timers`
-		_, err = templBuffer.WriteString(var_17)
+		var_18 := `My Blind Timers`
+		_, err = templBuffer.WriteString(var_18)
 		if err != nil {
 			return err
 		}
@@ -335,8 +352,8 @@ func (s *Service) dashboardTimers(ctx context.Context, timers []*poker.Timer) te
 			if err != nil {
 				return err
 			}
-			var_18 := `You don't have any timers. Click below to create one now`
-			_, err = templBuffer.WriteString(var_18)
+			var_19 := `You don't have any timers. Click below to create one now`
+			_, err = templBuffer.WriteString(var_19)
 			if err != nil {
 				return err
 			}
@@ -357,8 +374,8 @@ func (s *Service) dashboardTimers(ctx context.Context, timers []*poker.Timer) te
 		if err != nil {
 			return err
 		}
-		var_19 := `Create New Timer`
-		_, err = templBuffer.WriteString(var_19)
+		var_20 := `Create New Timer`
+		_, err = templBuffer.WriteString(var_20)
 		if err != nil {
 			return err
 		}
@@ -381,17 +398,17 @@ func (s *Service) dashboardTimerListItem(ctx context.Context, timer *poker.Timer
 			defer templ.ReleaseBuffer(templBuffer)
 		}
 		ctx = templ.InitializeContext(ctx)
-		var_20 := templ.GetChildren(ctx)
-		if var_20 == nil {
-			var_20 = templ.NopComponent
+		var_21 := templ.GetChildren(ctx)
+		if var_21 == nil {
+			var_21 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		_, err = templBuffer.WriteString("<div class=\"list-group-item\"><div class=\"d-flex justify-content-between\"><div>")
 		if err != nil {
 			return err
 		}
-		var var_21 string = timer.Name
-		_, err = templBuffer.WriteString(templ.EscapeString(var_21))
+		var var_22 string = timer.Name
+		_, err = templBuffer.WriteString(templ.EscapeString(var_22))
 		if err != nil {
 			return err
 		}
@@ -399,8 +416,17 @@ func (s *Service) dashboardTimerListItem(ctx context.Context, timer *poker.Timer
 		if err != nil {
 			return err
 		}
-		var var_22 templ.SafeURL = templ.URL(s.buildRoute("dashboard-timer", "timerID", timer.ID))
-		_, err = templBuffer.WriteString(templ.EscapeString(string(var_22)))
+		var var_23 templ.SafeURL = templ.SafeURL(s.buildRoute("play-timer", "timerID", timer.ID))
+		_, err = templBuffer.WriteString(templ.EscapeString(string(var_23)))
+		if err != nil {
+			return err
+		}
+		_, err = templBuffer.WriteString("\" class=\"btn btn-sm btn-success\"><i class=\"fa-solid fa-play\"></i></a><a href=\"")
+		if err != nil {
+			return err
+		}
+		var var_24 templ.SafeURL = templ.URL(s.buildRoute("dashboard-timer", "timerID", timer.ID))
+		_, err = templBuffer.WriteString(templ.EscapeString(string(var_24)))
 		if err != nil {
 			return err
 		}
@@ -431,17 +457,17 @@ func (s *Service) DashboardTimersNewForm(ctx context.Context) templ.Component {
 			defer templ.ReleaseBuffer(templBuffer)
 		}
 		ctx = templ.InitializeContext(ctx)
-		var_23 := templ.GetChildren(ctx)
-		if var_23 == nil {
-			var_23 = templ.NopComponent
+		var_25 := templ.GetChildren(ctx)
+		if var_25 == nil {
+			var_25 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		_, err = templBuffer.WriteString("<div class=\"container\" id=\"dashboard-section\" hx-swap-oob=\"true\"><div class=\"row\"><div class=\"col\"><h5 class=\"text-center\">")
 		if err != nil {
 			return err
 		}
-		var_24 := `Create A New Timer`
-		_, err = templBuffer.WriteString(var_24)
+		var_26 := `Create A New Timer`
+		_, err = templBuffer.WriteString(var_26)
 		if err != nil {
 			return err
 		}
@@ -457,8 +483,8 @@ func (s *Service) DashboardTimersNewForm(ctx context.Context) templ.Component {
 		if err != nil {
 			return err
 		}
-		var_25 := `Timer Name`
-		_, err = templBuffer.WriteString(var_25)
+		var_27 := `Timer Name`
+		_, err = templBuffer.WriteString(var_27)
 		if err != nil {
 			return err
 		}
@@ -466,8 +492,8 @@ func (s *Service) DashboardTimersNewForm(ctx context.Context) templ.Component {
 		if err != nil {
 			return err
 		}
-		var_26 := `Create Timer`
-		_, err = templBuffer.WriteString(var_26)
+		var_28 := `Create Timer`
+		_, err = templBuffer.WriteString(var_28)
 		if err != nil {
 			return err
 		}
@@ -495,9 +521,9 @@ func (s *Service) DashboardTimer(ctx context.Context, props *DashboardTimerProps
 			defer templ.ReleaseBuffer(templBuffer)
 		}
 		ctx = templ.InitializeContext(ctx)
-		var_27 := templ.GetChildren(ctx)
-		if var_27 == nil {
-			var_27 = templ.NopComponent
+		var_29 := templ.GetChildren(ctx)
+		if var_29 == nil {
+			var_29 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		_, err = templBuffer.WriteString("<!doctype html><html lang=\"en\">")
@@ -512,17 +538,21 @@ func (s *Service) DashboardTimer(ctx context.Context, props *DashboardTimerProps
 		if err != nil {
 			return err
 		}
+		err = s.breadcrumbs(s.newBreadcrumb("Dashboard", "dashboard"), s.newBreadcrumb("Timers", "dashboard-timers"), s.newBreadcrumb("Timer", "dashboard-timer", "timerID", props.Timer.ID)).Render(ctx, templBuffer)
+		if err != nil {
+			return err
+		}
 		_, err = templBuffer.WriteString("<div class=\"container\"><div class=\"row\"><div class=\"col\"><h1>")
 		if err != nil {
 			return err
 		}
-		var_28 := `Welcome `
-		_, err = templBuffer.WriteString(var_28)
+		var_30 := `Welcome `
+		_, err = templBuffer.WriteString(var_30)
 		if err != nil {
 			return err
 		}
-		var var_29 string = props.User.Name
-		_, err = templBuffer.WriteString(templ.EscapeString(var_29))
+		var var_31 string = props.User.Name
+		_, err = templBuffer.WriteString(templ.EscapeString(var_31))
 		if err != nil {
 			return err
 		}
@@ -569,9 +599,9 @@ func (s *Service) DashboardTimerFragment(ctx context.Context, timer *poker.Timer
 			defer templ.ReleaseBuffer(templBuffer)
 		}
 		ctx = templ.InitializeContext(ctx)
-		var_30 := templ.GetChildren(ctx)
-		if var_30 == nil {
-			var_30 = templ.NopComponent
+		var_32 := templ.GetChildren(ctx)
+		if var_32 == nil {
+			var_32 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		err = s.dashboardTimer(ctx, timer).Render(ctx, templBuffer)
@@ -593,17 +623,17 @@ func (s *Service) dashboardTimer(ctx context.Context, timer *poker.Timer) templ.
 			defer templ.ReleaseBuffer(templBuffer)
 		}
 		ctx = templ.InitializeContext(ctx)
-		var_31 := templ.GetChildren(ctx)
-		if var_31 == nil {
-			var_31 = templ.NopComponent
+		var_33 := templ.GetChildren(ctx)
+		if var_33 == nil {
+			var_33 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		_, err = templBuffer.WriteString("<div class=\"container\" id=\"dashboard-section\" hx-swap-oob=\"true\"><div class=\"row\"><div class=\"col\"><h5 class=\"text-center\">")
 		if err != nil {
 			return err
 		}
-		var var_32 string = timer.Name
-		_, err = templBuffer.WriteString(templ.EscapeString(var_32))
+		var var_34 string = timer.Name
+		_, err = templBuffer.WriteString(templ.EscapeString(var_34))
 		if err != nil {
 			return err
 		}
@@ -611,25 +641,7 @@ func (s *Service) dashboardTimer(ctx context.Context, timer *poker.Timer) templ.
 		if err != nil {
 			return err
 		}
-		var_33 := `#`
-		_, err = templBuffer.WriteString(var_33)
-		if err != nil {
-			return err
-		}
-		_, err = templBuffer.WriteString("</th><th>")
-		if err != nil {
-			return err
-		}
-		var_34 := `Small Blind`
-		_, err = templBuffer.WriteString(var_34)
-		if err != nil {
-			return err
-		}
-		_, err = templBuffer.WriteString("</th><th>")
-		if err != nil {
-			return err
-		}
-		var_35 := `Big Blind`
+		var_35 := `#`
 		_, err = templBuffer.WriteString(var_35)
 		if err != nil {
 			return err
@@ -638,7 +650,7 @@ func (s *Service) dashboardTimer(ctx context.Context, timer *poker.Timer) templ.
 		if err != nil {
 			return err
 		}
-		var_36 := `Ante`
+		var_36 := `Small Blind`
 		_, err = templBuffer.WriteString(var_36)
 		if err != nil {
 			return err
@@ -647,7 +659,7 @@ func (s *Service) dashboardTimer(ctx context.Context, timer *poker.Timer) templ.
 		if err != nil {
 			return err
 		}
-		var_37 := `Duration (minutes)`
+		var_37 := `Big Blind`
 		_, err = templBuffer.WriteString(var_37)
 		if err != nil {
 			return err
@@ -656,8 +668,26 @@ func (s *Service) dashboardTimer(ctx context.Context, timer *poker.Timer) templ.
 		if err != nil {
 			return err
 		}
-		var_38 := `&nbsp;`
+		var_38 := `Ante`
 		_, err = templBuffer.WriteString(var_38)
+		if err != nil {
+			return err
+		}
+		_, err = templBuffer.WriteString("</th><th>")
+		if err != nil {
+			return err
+		}
+		var_39 := `Duration (minutes)`
+		_, err = templBuffer.WriteString(var_39)
+		if err != nil {
+			return err
+		}
+		_, err = templBuffer.WriteString("</th><th>")
+		if err != nil {
+			return err
+		}
+		var_40 := `&nbsp;`
+		_, err = templBuffer.WriteString(var_40)
 		if err != nil {
 			return err
 		}
@@ -675,8 +705,8 @@ func (s *Service) dashboardTimer(ctx context.Context, timer *poker.Timer) templ.
 		if err != nil {
 			return err
 		}
-		var var_39 templ.SafeURL = templ.SafeURL(s.buildRoute("play-timer", "timerID", timer.ID))
-		_, err = templBuffer.WriteString(templ.EscapeString(string(var_39)))
+		var var_41 templ.SafeURL = templ.SafeURL(s.buildRoute("play-timer", "timerID", timer.ID))
+		_, err = templBuffer.WriteString(templ.EscapeString(string(var_41)))
 		if err != nil {
 			return err
 		}
@@ -684,8 +714,8 @@ func (s *Service) dashboardTimer(ctx context.Context, timer *poker.Timer) templ.
 		if err != nil {
 			return err
 		}
-		var_40 := `Start Timer`
-		_, err = templBuffer.WriteString(var_40)
+		var_42 := `Start Timer`
+		_, err = templBuffer.WriteString(var_42)
 		if err != nil {
 			return err
 		}
@@ -701,8 +731,8 @@ func (s *Service) dashboardTimer(ctx context.Context, timer *poker.Timer) templ.
 		if err != nil {
 			return err
 		}
-		var_41 := `Add	Blind`
-		_, err = templBuffer.WriteString(var_41)
+		var_43 := `Add	Blind`
+		_, err = templBuffer.WriteString(var_43)
 		if err != nil {
 			return err
 		}
@@ -718,8 +748,8 @@ func (s *Service) dashboardTimer(ctx context.Context, timer *poker.Timer) templ.
 		if err != nil {
 			return err
 		}
-		var_42 := `Add Break`
-		_, err = templBuffer.WriteString(var_42)
+		var_44 := `Add Break`
+		_, err = templBuffer.WriteString(var_44)
 		if err != nil {
 			return err
 		}
@@ -742,9 +772,9 @@ func (s *Service) dashboardTimerLevel(ctx context.Context, idx uint, level *poke
 			defer templ.ReleaseBuffer(templBuffer)
 		}
 		ctx = templ.InitializeContext(ctx)
-		var_43 := templ.GetChildren(ctx)
-		if var_43 == nil {
-			var_43 = templ.NopComponent
+		var_45 := templ.GetChildren(ctx)
+		if var_45 == nil {
+			var_45 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		_, err = templBuffer.WriteString("<tr>")
@@ -757,25 +787,7 @@ func (s *Service) dashboardTimerLevel(ctx context.Context, idx uint, level *poke
 			if err != nil {
 				return err
 			}
-			var var_44 string = format(idx)
-			_, err = templBuffer.WriteString(templ.EscapeString(var_44))
-			if err != nil {
-				return err
-			}
-			_, err = templBuffer.WriteString("</td> <td>")
-			if err != nil {
-				return err
-			}
-			var var_45 string = format(level.SmallBlind)
-			_, err = templBuffer.WriteString(templ.EscapeString(var_45))
-			if err != nil {
-				return err
-			}
-			_, err = templBuffer.WriteString("</td> <td>")
-			if err != nil {
-				return err
-			}
-			var var_46 string = format(level.BigBlind)
+			var var_46 string = format(idx)
 			_, err = templBuffer.WriteString(templ.EscapeString(var_46))
 			if err != nil {
 				return err
@@ -784,7 +796,7 @@ func (s *Service) dashboardTimerLevel(ctx context.Context, idx uint, level *poke
 			if err != nil {
 				return err
 			}
-			var var_47 string = format(level.Ante)
+			var var_47 string = format(level.SmallBlind)
 			_, err = templBuffer.WriteString(templ.EscapeString(var_47))
 			if err != nil {
 				return err
@@ -793,8 +805,26 @@ func (s *Service) dashboardTimerLevel(ctx context.Context, idx uint, level *poke
 			if err != nil {
 				return err
 			}
-			var var_48 string = format(level.DurationMin)
+			var var_48 string = format(level.BigBlind)
 			_, err = templBuffer.WriteString(templ.EscapeString(var_48))
+			if err != nil {
+				return err
+			}
+			_, err = templBuffer.WriteString("</td> <td>")
+			if err != nil {
+				return err
+			}
+			var var_49 string = format(level.Ante)
+			_, err = templBuffer.WriteString(templ.EscapeString(var_49))
+			if err != nil {
+				return err
+			}
+			_, err = templBuffer.WriteString("</td> <td>")
+			if err != nil {
+				return err
+			}
+			var var_50 string = format(level.DurationMin)
+			_, err = templBuffer.WriteString(templ.EscapeString(var_50))
 			if err != nil {
 				return err
 			}
@@ -807,8 +837,8 @@ func (s *Service) dashboardTimerLevel(ctx context.Context, idx uint, level *poke
 			if err != nil {
 				return err
 			}
-			var var_49 string = format(idx)
-			_, err = templBuffer.WriteString(templ.EscapeString(var_49))
+			var var_51 string = format(idx)
+			_, err = templBuffer.WriteString(templ.EscapeString(var_51))
 			if err != nil {
 				return err
 			}
@@ -816,8 +846,8 @@ func (s *Service) dashboardTimerLevel(ctx context.Context, idx uint, level *poke
 			if err != nil {
 				return err
 			}
-			var_50 := `BREAK! `
-			_, err = templBuffer.WriteString(var_50)
+			var_52 := `BREAK! `
+			_, err = templBuffer.WriteString(var_52)
 			if err != nil {
 				return err
 			}
@@ -825,8 +855,8 @@ func (s *Service) dashboardTimerLevel(ctx context.Context, idx uint, level *poke
 			if err != nil {
 				return err
 			}
-			var var_51 string = format(level.DurationMin)
-			_, err = templBuffer.WriteString(templ.EscapeString(var_51))
+			var var_53 string = format(level.DurationMin)
+			_, err = templBuffer.WriteString(templ.EscapeString(var_53))
 			if err != nil {
 				return err
 			}
@@ -870,9 +900,9 @@ func (s *Service) DashboardTimerLevelNew(ctx context.Context, timerID, levelType
 			defer templ.ReleaseBuffer(templBuffer)
 		}
 		ctx = templ.InitializeContext(ctx)
-		var_52 := templ.GetChildren(ctx)
-		if var_52 == nil {
-			var_52 = templ.NopComponent
+		var_54 := templ.GetChildren(ctx)
+		if var_54 == nil {
+			var_54 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		switch levelType {
@@ -902,17 +932,17 @@ func (s *Service) dashboardTimerLevelNewBreak(ctx context.Context, timerID, leve
 			defer templ.ReleaseBuffer(templBuffer)
 		}
 		ctx = templ.InitializeContext(ctx)
-		var_53 := templ.GetChildren(ctx)
-		if var_53 == nil {
-			var_53 = templ.NopComponent
+		var_55 := templ.GetChildren(ctx)
+		if var_55 == nil {
+			var_55 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		_, err = templBuffer.WriteString("<div class=\"container\" id=\"dashboard-section\" hx-swap-oob=\"true\"><div class=\"row\"><div class=\"col\"><h5 class=\"text-center\">")
 		if err != nil {
 			return err
 		}
-		var_54 := `Create A New Timer Break Level`
-		_, err = templBuffer.WriteString(var_54)
+		var_56 := `Create A New Timer Break Level`
+		_, err = templBuffer.WriteString(var_56)
 		if err != nil {
 			return err
 		}
@@ -944,8 +974,8 @@ func (s *Service) dashboardTimerLevelNewBreak(ctx context.Context, timerID, leve
 		if err != nil {
 			return err
 		}
-		var_55 := `Duration (minutes)`
-		_, err = templBuffer.WriteString(var_55)
+		var_57 := `Duration (minutes)`
+		_, err = templBuffer.WriteString(var_57)
 		if err != nil {
 			return err
 		}
@@ -953,8 +983,8 @@ func (s *Service) dashboardTimerLevelNewBreak(ctx context.Context, timerID, leve
 		if err != nil {
 			return err
 		}
-		var_56 := `Create Level`
-		_, err = templBuffer.WriteString(var_56)
+		var_58 := `Create Level`
+		_, err = templBuffer.WriteString(var_58)
 		if err != nil {
 			return err
 		}
@@ -970,8 +1000,8 @@ func (s *Service) dashboardTimerLevelNewBreak(ctx context.Context, timerID, leve
 		if err != nil {
 			return err
 		}
-		var_57 := `Cancel`
-		_, err = templBuffer.WriteString(var_57)
+		var_59 := `Cancel`
+		_, err = templBuffer.WriteString(var_59)
 		if err != nil {
 			return err
 		}
@@ -994,17 +1024,17 @@ func (s *Service) dashboardTimerLevelNewBlind(ctx context.Context, timerID, leve
 			defer templ.ReleaseBuffer(templBuffer)
 		}
 		ctx = templ.InitializeContext(ctx)
-		var_58 := templ.GetChildren(ctx)
-		if var_58 == nil {
-			var_58 = templ.NopComponent
+		var_60 := templ.GetChildren(ctx)
+		if var_60 == nil {
+			var_60 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		_, err = templBuffer.WriteString("<div class=\"container\" id=\"dashboard-section\" hx-swap-oob=\"true\"><div class=\"row\"><div class=\"col\"><h5 class=\"text-center\">")
 		if err != nil {
 			return err
 		}
-		var_59 := `Create A New Timer Blind Level`
-		_, err = templBuffer.WriteString(var_59)
+		var_61 := `Create A New Timer Blind Level`
+		_, err = templBuffer.WriteString(var_61)
 		if err != nil {
 			return err
 		}
@@ -1036,8 +1066,8 @@ func (s *Service) dashboardTimerLevelNewBlind(ctx context.Context, timerID, leve
 		if err != nil {
 			return err
 		}
-		var_60 := `Small Blind`
-		_, err = templBuffer.WriteString(var_60)
+		var_62 := `Small Blind`
+		_, err = templBuffer.WriteString(var_62)
 		if err != nil {
 			return err
 		}
@@ -1045,8 +1075,8 @@ func (s *Service) dashboardTimerLevelNewBlind(ctx context.Context, timerID, leve
 		if err != nil {
 			return err
 		}
-		var_61 := `Big Blind`
-		_, err = templBuffer.WriteString(var_61)
+		var_63 := `Big Blind`
+		_, err = templBuffer.WriteString(var_63)
 		if err != nil {
 			return err
 		}
@@ -1054,8 +1084,8 @@ func (s *Service) dashboardTimerLevelNewBlind(ctx context.Context, timerID, leve
 		if err != nil {
 			return err
 		}
-		var_62 := `Ante`
-		_, err = templBuffer.WriteString(var_62)
+		var_64 := `Ante`
+		_, err = templBuffer.WriteString(var_64)
 		if err != nil {
 			return err
 		}
@@ -1063,8 +1093,8 @@ func (s *Service) dashboardTimerLevelNewBlind(ctx context.Context, timerID, leve
 		if err != nil {
 			return err
 		}
-		var_63 := `Duration (minutes)`
-		_, err = templBuffer.WriteString(var_63)
+		var_65 := `Duration (minutes)`
+		_, err = templBuffer.WriteString(var_65)
 		if err != nil {
 			return err
 		}
@@ -1072,8 +1102,8 @@ func (s *Service) dashboardTimerLevelNewBlind(ctx context.Context, timerID, leve
 		if err != nil {
 			return err
 		}
-		var_64 := `Create Level`
-		_, err = templBuffer.WriteString(var_64)
+		var_66 := `Create Level`
+		_, err = templBuffer.WriteString(var_66)
 		if err != nil {
 			return err
 		}
@@ -1089,8 +1119,8 @@ func (s *Service) dashboardTimerLevelNewBlind(ctx context.Context, timerID, leve
 		if err != nil {
 			return err
 		}
-		var_65 := `Cancel`
-		_, err = templBuffer.WriteString(var_65)
+		var_67 := `Cancel`
+		_, err = templBuffer.WriteString(var_67)
 		if err != nil {
 			return err
 		}
@@ -1113,9 +1143,9 @@ func (s *Service) DashboardTimerLevelEdit(ctx context.Context, level *poker.Time
 			defer templ.ReleaseBuffer(templBuffer)
 		}
 		ctx = templ.InitializeContext(ctx)
-		var_66 := templ.GetChildren(ctx)
-		if var_66 == nil {
-			var_66 = templ.NopComponent
+		var_68 := templ.GetChildren(ctx)
+		if var_68 == nil {
+			var_68 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		switch level.Type {
@@ -1145,17 +1175,17 @@ func (s *Service) dashboardTimerLevelEditBreak(ctx context.Context, level *poker
 			defer templ.ReleaseBuffer(templBuffer)
 		}
 		ctx = templ.InitializeContext(ctx)
-		var_67 := templ.GetChildren(ctx)
-		if var_67 == nil {
-			var_67 = templ.NopComponent
+		var_69 := templ.GetChildren(ctx)
+		if var_69 == nil {
+			var_69 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		_, err = templBuffer.WriteString("<div class=\"container\" id=\"dashboard-section\" hx-swap-oob=\"true\"><div class=\"row\"><div class=\"col\"><h5 class=\"text-center\">")
 		if err != nil {
 			return err
 		}
-		var_68 := `Edit A Break Level`
-		_, err = templBuffer.WriteString(var_68)
+		var_70 := `Edit A Break Level`
+		_, err = templBuffer.WriteString(var_70)
 		if err != nil {
 			return err
 		}
@@ -1171,8 +1201,8 @@ func (s *Service) dashboardTimerLevelEditBreak(ctx context.Context, level *poker
 		if err != nil {
 			return err
 		}
-		var_69 := `Duration (minutes)`
-		_, err = templBuffer.WriteString(var_69)
+		var_71 := `Duration (minutes)`
+		_, err = templBuffer.WriteString(var_71)
 		if err != nil {
 			return err
 		}
@@ -1188,8 +1218,8 @@ func (s *Service) dashboardTimerLevelEditBreak(ctx context.Context, level *poker
 		if err != nil {
 			return err
 		}
-		var_70 := `Edit Level`
-		_, err = templBuffer.WriteString(var_70)
+		var_72 := `Edit Level`
+		_, err = templBuffer.WriteString(var_72)
 		if err != nil {
 			return err
 		}
@@ -1205,8 +1235,8 @@ func (s *Service) dashboardTimerLevelEditBreak(ctx context.Context, level *poker
 		if err != nil {
 			return err
 		}
-		var_71 := `Cancel`
-		_, err = templBuffer.WriteString(var_71)
+		var_73 := `Cancel`
+		_, err = templBuffer.WriteString(var_73)
 		if err != nil {
 			return err
 		}
@@ -1229,17 +1259,17 @@ func (s *Service) dashboardTimerLevelEditBlind(ctx context.Context, level *poker
 			defer templ.ReleaseBuffer(templBuffer)
 		}
 		ctx = templ.InitializeContext(ctx)
-		var_72 := templ.GetChildren(ctx)
-		if var_72 == nil {
-			var_72 = templ.NopComponent
+		var_74 := templ.GetChildren(ctx)
+		if var_74 == nil {
+			var_74 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		_, err = templBuffer.WriteString("<div class=\"container\" id=\"dashboard-section\" hx-swap-oob=\"true\"><div class=\"row\"><div class=\"col\"><h5 class=\"text-center\">")
 		if err != nil {
 			return err
 		}
-		var_73 := `Edit A Blind Level`
-		_, err = templBuffer.WriteString(var_73)
+		var_75 := `Edit A Blind Level`
+		_, err = templBuffer.WriteString(var_75)
 		if err != nil {
 			return err
 		}
@@ -1255,8 +1285,8 @@ func (s *Service) dashboardTimerLevelEditBlind(ctx context.Context, level *poker
 		if err != nil {
 			return err
 		}
-		var_74 := `Small Blind`
-		_, err = templBuffer.WriteString(var_74)
+		var_76 := `Small Blind`
+		_, err = templBuffer.WriteString(var_76)
 		if err != nil {
 			return err
 		}
@@ -1272,8 +1302,8 @@ func (s *Service) dashboardTimerLevelEditBlind(ctx context.Context, level *poker
 		if err != nil {
 			return err
 		}
-		var_75 := `Big Blind`
-		_, err = templBuffer.WriteString(var_75)
+		var_77 := `Big Blind`
+		_, err = templBuffer.WriteString(var_77)
 		if err != nil {
 			return err
 		}
@@ -1289,8 +1319,8 @@ func (s *Service) dashboardTimerLevelEditBlind(ctx context.Context, level *poker
 		if err != nil {
 			return err
 		}
-		var_76 := `Ante`
-		_, err = templBuffer.WriteString(var_76)
+		var_78 := `Ante`
+		_, err = templBuffer.WriteString(var_78)
 		if err != nil {
 			return err
 		}
@@ -1306,8 +1336,8 @@ func (s *Service) dashboardTimerLevelEditBlind(ctx context.Context, level *poker
 		if err != nil {
 			return err
 		}
-		var_77 := `Duration (minutes)`
-		_, err = templBuffer.WriteString(var_77)
+		var_79 := `Duration (minutes)`
+		_, err = templBuffer.WriteString(var_79)
 		if err != nil {
 			return err
 		}
@@ -1323,8 +1353,8 @@ func (s *Service) dashboardTimerLevelEditBlind(ctx context.Context, level *poker
 		if err != nil {
 			return err
 		}
-		var_78 := `Edit Level`
-		_, err = templBuffer.WriteString(var_78)
+		var_80 := `Edit Level`
+		_, err = templBuffer.WriteString(var_80)
 		if err != nil {
 			return err
 		}
@@ -1340,8 +1370,8 @@ func (s *Service) dashboardTimerLevelEditBlind(ctx context.Context, level *poker
 		if err != nil {
 			return err
 		}
-		var_79 := `Cancel`
-		_, err = templBuffer.WriteString(var_79)
+		var_81 := `Cancel`
+		_, err = templBuffer.WriteString(var_81)
 		if err != nil {
 			return err
 		}

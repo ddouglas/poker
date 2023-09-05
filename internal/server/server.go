@@ -17,8 +17,10 @@ import (
 )
 
 type server struct {
-	env      poker.Environment
-	port     string
+	env    poker.Environment
+	appURL string
+	port   string
+
 	http     *http.Server
 	logger   *logrus.Logger
 	router   *mux.Router
@@ -36,6 +38,7 @@ type server struct {
 
 func New(
 	env poker.Environment,
+	appURL string,
 	port string,
 	logger *logrus.Logger,
 
@@ -48,6 +51,7 @@ func New(
 
 	s := &server{
 		env:      env,
+		appURL:   appURL,
 		port:     port,
 		logger:   logger,
 		sessions: sessions,
@@ -107,22 +111,24 @@ func (s *server) BuildRoute(name string, pairsInf ...any) (string, error) {
 func (s *server) buildRouter() *mux.Router {
 
 	router := mux.NewRouter()
+	router.Use(s.logging)
 	router.Use(s.user)
 
-	router.HandleFunc("/", s.handleHome).Name("home")
-	router.HandleFunc("/login", s.handleLogin).Name("login")
-	router.PathPrefix("/static").Handler(http.StripPrefix("/static/", http.FileServer(http.FS(poker.AssetFS(s.env))))).Name("static")
+	router.HandleFunc("/", s.handleHome).Name("home").Methods(http.MethodGet)
+	router.HandleFunc("/login", s.handleLogin).Name("login").Methods(http.MethodGet)
+	router.HandleFunc("/logout", s.handleLogout).Name("logout").Methods(http.MethodGet)
+	router.PathPrefix("/static").Handler(http.StripPrefix("/static/", http.FileServer(http.FS(poker.AssetFS(s.env))))).Name("static").Methods(http.MethodGet)
 
 	authed := router.NewRoute().Subrouter()
 	authed.Use(s.auth)
-	authed.HandleFunc("/dashboard", s.handleDashboard).Name("dashboard")
-	authed.HandleFunc("/dashboard/timers", s.handleDashboardTimers).Name("dashboard-timers")
+	authed.HandleFunc("/dashboard", s.handleDashboard).Name("dashboard").Methods(http.MethodGet)
+	authed.HandleFunc("/dashboard/timers", s.handleDashboardTimers).Name("dashboard-timers").Methods(http.MethodGet)
 	authed.HandleFunc("/dashboard/timers/new", func(w http.ResponseWriter, r *http.Request) {
 		map[string]http.HandlerFunc{
 			http.MethodGet:  s.handleGetDashboardTimerNew,
 			http.MethodPost: s.handlePostDashboardTimerNew,
 		}[r.Method](w, r)
-	}).Name("dashboard-timers-new")
+	}).Methods(http.MethodGet, http.MethodPost).Name("dashboard-timers-new")
 
 	authed.HandleFunc("/dashboard/timers/{timerID}", func(w http.ResponseWriter, r *http.Request) {
 		map[string]http.HandlerFunc{
@@ -135,25 +141,25 @@ func (s *server) buildRouter() *mux.Router {
 		map[string]http.HandlerFunc{
 			http.MethodGet: s.handleGetPlayTimer,
 		}[r.Method](w, r)
-	}).Methods(http.MethodGet, http.MethodDelete).Name("play-timer")
+	}).Methods(http.MethodGet).Name("play-timer")
 
 	authed.HandleFunc("/play/{timerID}/levels/reset", func(w http.ResponseWriter, r *http.Request) {
 		map[string]http.HandlerFunc{
 			http.MethodGet: s.handleGetPlayTimerResetLevel,
 		}[r.Method](w, r)
-	}).Methods(http.MethodGet, http.MethodDelete).Name("play-timer-reset-level")
+	}).Methods(http.MethodGet).Name("play-timer-reset-level")
 
 	authed.HandleFunc("/play/{timerID}/levels/next", func(w http.ResponseWriter, r *http.Request) {
 		map[string]http.HandlerFunc{
 			http.MethodGet: s.handleGetPlayTimerNextLevel,
 		}[r.Method](w, r)
-	}).Methods(http.MethodGet, http.MethodDelete).Name("play-timer-next-level")
+	}).Methods(http.MethodGet).Name("play-timer-next-level")
 
 	authed.HandleFunc("/play/{timerID}/levels/previous", func(w http.ResponseWriter, r *http.Request) {
 		map[string]http.HandlerFunc{
 			http.MethodGet: s.handleGetPlayTimerPreviousLevel,
 		}[r.Method](w, r)
-	}).Methods(http.MethodGet, http.MethodDelete).Name("play-timer-previous-level")
+	}).Methods(http.MethodGet).Name("play-timer-previous-level")
 
 	authed.HandleFunc("/dashboard/timers/{timerID}/levels/new", func(w http.ResponseWriter, r *http.Request) {
 		map[string]http.HandlerFunc{

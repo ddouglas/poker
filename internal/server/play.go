@@ -32,9 +32,28 @@ func (s *server) handleGetPlayTimer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	level := timer.Levels[timer.CurrentLevel]
+	if len(timer.Levels) <= 0 {
+		location, err := s.BuildRoute("dashboard-timer", "timerID", timer.ID)
+		if err != nil {
+			s.logger.WithError(err).Error("failed to build route to redirect to")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Location", location)
+		w.WriteHeader(http.StatusTemporaryRedirect)
+		return
+	}
+
+	var currentLevel = int(timer.CurrentLevel)
+	if currentLevel >= len(timer.Levels)-1 {
+		timer.CurrentLevel = 0
+	}
+
+	level := timer.Levels[currentLevel]
 
 	level.DurationStr = formatDuration(int(level.DurationSec))
+
 	err = s.templates.Play(ctx, &templates.PlayProps{
 		User:         internal.UserFromContext(ctx),
 		Timer:        timer,
@@ -121,13 +140,6 @@ func (s *server) handleGetPlayTimerNextLevel(w http.ResponseWriter, r *http.Requ
 
 		timer.IsComplete = true
 
-		err = s.timerRepo.SaveTimer(ctx, timer)
-		if err != nil {
-			s.logger.WithError(err).Error("failed to save timer")
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
 		err = s.templates.TimerMasthead(
 			timer,
 			level,
@@ -206,7 +218,7 @@ func (s *server) handleGetPlayTimerPreviousLevel(w http.ResponseWriter, r *http.
 		err = s.templates.TimerMasthead(
 			timer,
 			level,
-			timer.CurrentLevel,
+			timer.CurrentLevel+1,
 		).Render(ctx, w)
 		if err != nil {
 			s.logger.WithError(err).Error("failed to render dashboard timer")

@@ -51,6 +51,7 @@ func main() {
 
 	server := server.New(
 		appConfig.Environment,
+		appConfig.AppURL,
 		appConfig.Server.Port,
 		logger,
 

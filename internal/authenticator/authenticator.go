@@ -11,6 +11,8 @@ import (
 type Service struct {
 	*oidc.Provider
 	*oauth2.Config
+
+	IssuerURL string
 }
 
 type Config struct {
@@ -22,9 +24,11 @@ type Config struct {
 
 func New(cfg *Config) (*Service, error) {
 
+	var issuerURL = fmt.Sprintf("https://%s/", cfg.Tenant)
+
 	provider, err := oidc.NewProvider(
 		context.Background(),
-		fmt.Sprintf("https://%s/", cfg.Tenant),
+		issuerURL,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to provision oidc provider: %w", err)
@@ -39,6 +43,7 @@ func New(cfg *Config) (*Service, error) {
 			Endpoint:     provider.Endpoint(),
 			Scopes:       []string{oidc.ScopeOpenID, "profile"},
 		},
+		IssuerURL: issuerURL,
 	}, nil
 
 }

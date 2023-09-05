@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"net/url"
 	"poker"
 
 	"github.com/google/uuid"
@@ -125,7 +126,33 @@ func (s *server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Println(s.authenticator.Provider.Endpoint().AuthURL)
+
 	s.writeRedirectRouteName(w, "dashboard")
+
+}
+
+func (s *server) handleLogout(w http.ResponseWriter, r *http.Request) {
+
+	session, err := s.sessions.Get(r, "poker-session")
+	if err != nil {
+		// Create an error page and redirect to that. Use session flashing to flash an internal error message of sorts
+		s.logger.WithError(err).Error("failed to load session")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	session.Options.MaxAge = -1
+
+	err = session.Save(r, w)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to exchange code for token")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Location", fmt.Sprintf("%sv2/logout?client_id=%s&returnTo=%s", s.authenticator.IssuerURL, s.authenticator.ClientID, url.QueryEscape(s.appURL)))
+	w.WriteHeader(http.StatusTemporaryRedirect)
 
 }
 

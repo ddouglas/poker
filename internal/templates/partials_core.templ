@@ -43,7 +43,16 @@ templ (s *Service) navbar(ctx context.Context, user *poker.User) {
 				</ul>
 				<ul class="navbar-nav mb-2 mb-lg-0">
 					if (user != nil) {
-						<li class="nav-item"><a class="nav-link" href={ templ.URL(s.buildRoute("dashboard")) }>Welcome { user.Name }</a></li>
+						<li class="nav-item dropdown">
+							<a class="nav-link dropdown-toggle" data-bs-toggle="dropdown"  role="button">Welcome { user.Name }</a>
+							<ul class="dropdown-menu">
+								<li><a class="dropdown-item" href={ templ.URL(s.buildRoute("dashboard")) }>Dashboard</a></li>
+								<li>
+									<hr class="dropdown-divider"/>
+								</li>
+								<li><a class="dropdown-item" href={ templ.URL(s.buildRoute("logout")) }>Logout</a></li>
+							</ul>
+						</li>
 					} else {
 						<li class="nav-item"><a class="nav-link" href={ templ.URL(s.buildRoute("login")) }>Login</a></li>
 					}

@@ -7,9 +7,10 @@ import (
 
 templ (s *Service) Dashboard(ctx context.Context, user *poker.User) {
 	<html lang="en">
-			@s.top()
+		@s.top()
 		<body>
 			@s.navbar(ctx, user)
+			@s.breadcrumbs(s.newBreadcrumb("Dashboard", "dashboard"))
 			<div class="container">
 				<div class="row">
 					<div class="col">
@@ -30,7 +31,7 @@ templ (s *Service) Dashboard(ctx context.Context, user *poker.User) {
 templ (s *Service) dashboardUserMenu() {
 	<h5>User Menu</h5>
 	<hr/>
-	<div class="list-group"><a href={ templ.URL(s.buildRoute("dashboard")) } class="list-group-item list-group-item-action">Dashboard</a> <a href={ templ.URL(s.buildRoute("dashboard-timers")) } class="list-group-item list-group-item-action">My Timers</a></div>
+	<div class="list-group"><a href={ templ.URL(s.buildRoute("dashboard")) } class="list-group-item list-group-item-action">Dashboard</a><a href={ templ.URL(s.buildRoute("dashboard-timers")) } class="list-group-item list-group-item-action">My Timers</a></div>
 }
 
 templ (s *Service) dashboardStandings() {
@@ -39,6 +40,7 @@ templ (s *Service) dashboardStandings() {
 			<div class="col">
 				<h5 class="text-center">Your Standings</h5>
 				<hr/>
+				<h2 class="text-center">Coming Soon</h2>
 			</div>
 		</div>
 	</div>
@@ -53,6 +55,7 @@ templ (s *Service) DashboardTimers(ctx context.Context, props *DashboardTimersPr
 	<html lang="en">
 		@s.top()
 		@s.navbar(ctx, props.User)
+		@s.breadcrumbs(s.newBreadcrumb("Dashboard", "dashboard"), s.newBreadcrumb("Timers", "dashboard-timers"))
 		<div class="container">
 			<div class="row">
 				<div class="col">
@@ -105,7 +108,7 @@ templ (s *Service) dashboardTimerListItem(ctx context.Context, timer *poker.Time
 		<div class="d-flex justify-content-between">
 			<div>{ timer.Name }</div>
 			<div>
-				<div class="btn-group" role="group" aria-label="Basic example"><a href={ templ.URL(s.buildRoute("dashboard-timer", "timerID", timer.ID)) } class="btn btn-sm btn-info"><i class="fa-solid fa-pencil"></i></a> <button type="button" class="btn btn-sm btn-danger" hx-delete={ s.buildRoute("dashboard-timer", "timerID" , timer.ID) } hx-confirm="Are you sure you want to delete this timer?"><i class="fa-solid fa-trash"></i></button></div>
+				<div class="btn-group" role="group" aria-label="Basic example"><a href={ templ.SafeURL(s.buildRoute("play-timer", "timerID", timer.ID)) } class="btn btn-sm btn-success"><i class="fa-solid fa-play"></i></a> <a href={ templ.URL(s.buildRoute("dashboard-timer", "timerID", timer.ID)) } class="btn btn-sm btn-info"><i class="fa-solid fa-pencil"></i></a> <button type="button" class="btn btn-sm btn-danger" hx-delete={ s.buildRoute("dashboard-timer", "timerID" , timer.ID) } hx-confirm="Are you sure you want to delete this timer?"><i class="fa-solid fa-trash"></i></button></div>
 			</div>
 		</div>
 	</div>
@@ -144,6 +147,7 @@ templ (s *Service) DashboardTimer(ctx context.Context, props *DashboardTimerProp
 	<html lang="en">
 		@s.top()
 		@s.navbar(ctx, props.User)
+		@s.breadcrumbs(s.newBreadcrumb("Dashboard", "dashboard"), s.newBreadcrumb("Timers", "dashboard-timers"), s.newBreadcrumb("Timer", "dashboard-timer", "timerID", props.Timer.ID))
 		<div class="container">
 			<div class="row">
 				<div class="col">
@@ -192,7 +196,7 @@ templ (s *Service) dashboardTimer(ctx context.Context, timer *poker.Timer) {
 		</div>
 		<div class="row">
 			<div class="col-6 offset-3">
-				<div class="d-flex justify-content-around"><a href={ templ.SafeURL(s.buildRoute("play-timer", "timerID", timer.ID)) } class="btn btn-sm btn-success">Start Timer</a> <button hx-get={ fmt.Sprintf("%s?type=%s", s.buildRoute("dashboard-timer-levels", "timerID", timer.ID), "blind") } class="btn btn-sm btn-primary">Add	Blind</button> <button hx-get={ fmt.Sprintf("%s?type=%s", s.buildRoute("dashboard-timer-levels", "timerID", timer.ID), "break") } class="btn btn-sm btn-primary">Add Break</button></div>
+				<div class="d-flex justify-content-around"><a href={ templ.SafeURL(s.buildRoute("play-timer", "timerID", timer.ID)) } class="btn btn-sm btn-success">Start Timer</a><button hx-get={ fmt.Sprintf("%s?type=%s", s.buildRoute("dashboard-timer-levels", "timerID", timer.ID), "blind") } class="btn btn-sm btn-primary">Add	Blind</button><button hx-get={ fmt.Sprintf("%s?type=%s", s.buildRoute("dashboard-timer-levels", "timerID", timer.ID), "break") } class="btn btn-sm btn-primary">Add Break</button></div>
 			</div>
 		</div>
 	</div>
@@ -212,7 +216,7 @@ templ (s *Service) dashboardTimerLevel(ctx context.Context, idx uint, level *pok
 				<td colspan="3" class="text-center"><strong><em>BREAK! </em></strong></td>
 				<td>{ format(level.DurationMin) }</td>
 		}
-		<td><button hx-get={ s.buildRoute("dashboard-timer-level", "timerID", level.TimerID, "levelID", level.ID) } class="btn btn-primary"><i class="fa-solid fa-pencil"></i></button> <button hx-delete={ s.buildRoute("dashboard-timer-level", "timerID", level.TimerID, "levelID", level.ID) } class="btn btn-danger ms-2"><i class="fa-solid fa-trash"></i></button></td>
+		<td><button hx-get={ s.buildRoute("dashboard-timer-level", "timerID", level.TimerID, "levelID", level.ID) } class="btn btn-primary"><i class="fa-solid fa-pencil"></i></button><button hx-delete={ s.buildRoute("dashboard-timer-level", "timerID", level.TimerID, "levelID", level.ID) } class="btn btn-danger ms-2"><i class="fa-solid fa-trash"></i></button></td>
 	</tr>
 }
 
@@ -240,8 +244,8 @@ templ (s *Service) dashboardTimerLevelNewBreak(ctx context.Context, timerID, lev
 						<form hx-post={ s.buildRoute("dashboard-timer-levels", "timerID", timerID) } hx-target="#dashboard-section">
 							<input type="hidden" name="TimerID" value={ timerID }/>
 							<input type="hidden" name="Type" value={ levelType }/>
-							<div class="mb-3"><label class="form-label">Duration (minutes)</label> <input type="number" class="form-control" name="DurationMin"/></div>
-							<div class="d-flex justify-content-center"><button type="submit" class="btn btn-primary">Create Level</button> <button hx-get={ s.buildRoute("dashboard-timer", "timerID", timerID) } class="btn btn-danger ms-2">Cancel</button></div>
+							<div class="mb-3"><label class="form-label">Duration (minutes)</label><input type="number" class="form-control" name="DurationMin"/></div>
+							<div class="d-flex justify-content-center"><button type="submit" class="btn btn-primary">Create Level</button><button hx-get={ s.buildRoute("dashboard-timer", "timerID", timerID) } class="btn btn-danger ms-2">Cancel</button></div>
 						</form>
 					</div>
 				</div>
@@ -265,11 +269,11 @@ templ (s *Service) dashboardTimerLevelNewBlind(ctx context.Context, timerID, lev
 						<form hx-post={ s.buildRoute("dashboard-timer-levels", "timerID", timerID) } hx-target="#dashboard-section">
 							<input type="hidden" name="TimerID" value={ timerID }/>
 							<input type="hidden" name="Type" value={ levelType }/>
-							<div class="mb-3"><label class="form-label">Small Blind</label> <input type="number" class="form-control" name="SmallBlind"/></div>
-							<div class="mb-3"><label class="form-label">Big Blind</label> <input type="number" class="form-control" name="BigBlind"/></div>
-							<div class="mb-3"><label class="form-label">Ante</label> <input type="number" class="form-control" name="Ante"/></div>
-							<div class="mb-3"><label class="form-label">Duration (minutes)</label> <input type="number" class="form-control" name="DurationMin"/></div>
-							<div class="d-flex justify-content-center"><button type="submit" class="btn btn-primary">Create Level</button> <button hx-get={ s.buildRoute("dashboard-timer", "timerID", timerID) } class="btn btn-danger ms-2">Cancel</button></div>
+							<div class="mb-3"><label class="form-label">Small Blind</label><input type="number" class="form-control" name="SmallBlind"/></div>
+							<div class="mb-3"><label class="form-label">Big Blind</label><input type="number" class="form-control" name="BigBlind"/></div>
+							<div class="mb-3"><label class="form-label">Ante</label><input type="number" class="form-control" name="Ante"/></div>
+							<div class="mb-3"><label class="form-label">Duration (minutes)</label><input type="number" class="form-control" name="DurationMin"/></div>
+							<div class="d-flex justify-content-center"><button type="submit" class="btn btn-primary">Create Level</button><button hx-get={ s.buildRoute("dashboard-timer", "timerID", timerID) } class="btn btn-danger ms-2">Cancel</button></div>
 						</form>
 					</div>
 				</div>
@@ -300,8 +304,8 @@ templ (s *Service) dashboardTimerLevelEditBreak(ctx context.Context, level *poke
 				<div class="card">
 					<div class="card-body">
 						<form hx-post={ s.buildRoute("dashboard-timer-level",  "timerID", level.TimerID, "levelID", level.ID) } hx-target="#dashboard-section">
-							<div class="mb-3"><label class="form-label">Duration (minutes)</label> <input type="number" class="form-control" name="DurationMin" value={ format(level.DurationMin) }/></div>
-							<div class="d-flex justify-content-center"><button type="submit" class="btn btn-primary">Edit Level</button> <button hx-get={ s.buildRoute("dashboard-timer", "timerID", level.TimerID) } class="btn btn-danger ms-2">Cancel</button></div>
+							<div class="mb-3"><label class="form-label">Duration (minutes)</label><input type="number" class="form-control" name="DurationMin" value={ format(level.DurationMin) }/></div>
+							<div class="d-flex justify-content-center"><button type="submit" class="btn btn-primary">Edit Level</button><button hx-get={ s.buildRoute("dashboard-timer", "timerID", level.TimerID) } class="btn btn-danger ms-2">Cancel</button></div>
 						</form>
 					</div>
 				</div>
@@ -323,11 +327,11 @@ templ (s *Service) dashboardTimerLevelEditBlind(ctx context.Context, level *poke
 				<div class="card">
 					<div class="card-body">
 						<form hx-post={ s.buildRoute("dashboard-timer-level", "timerID", level.TimerID, "levelID", level.ID) } hx-target="#dashboard-section">
-							<div class="mb-3"><label class="form-label">Small Blind</label> <input type="number" class="form-control" name="SmallBlind" value={ format(level.SmallBlind) }/></div>
-							<div class="mb-3"><label class="form-label">Big Blind</label> <input type="number" class="form-control" name="BigBlind" value={ format(level.BigBlind) }/></div>
-							<div class="mb-3"><label class="form-label">Ante</label> <input type="number" class="form-control" name="Ante" value={ format(level.Ante) }/></div>
-							<div class="mb-3"><label class="form-label">Duration (minutes)</label> <input type="number" class="form-control" name="DurationMin" value={ format(level.DurationMin) }/></div>
-							<div class="d-flex justify-content-center"><button type="submit" class="btn btn-primary">Edit Level</button> <button hx-get={ s.buildRoute("dashboard-timer", "timerID", level.TimerID) } class="btn btn-danger ms-2">Cancel</button></div>
+							<div class="mb-3"><label class="form-label">Small Blind</label><input type="number" class="form-control" name="SmallBlind" value={ format(level.SmallBlind) }/></div>
+							<div class="mb-3"><label class="form-label">Big Blind</label><input type="number" class="form-control" name="BigBlind" value={ format(level.BigBlind) }/></div>
+							<div class="mb-3"><label class="form-label">Ante</label><input type="number" class="form-control" name="Ante" value={ format(level.Ante) }/></div>
+							<div class="mb-3"><label class="form-label">Duration (minutes)</label><input type="number" class="form-control" name="DurationMin" value={ format(level.DurationMin) }/></div>
+							<div class="d-flex justify-content-center"><button type="submit" class="btn btn-primary">Edit Level</button><button hx-get={ s.buildRoute("dashboard-timer", "timerID", level.TimerID) } class="btn btn-danger ms-2">Cancel</button></div>
 						</form>
 					</div>
 				</div>

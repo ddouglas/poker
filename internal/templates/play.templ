@@ -14,7 +14,13 @@ type PlayProps struct {
 templ (s *Service) Play(ctx context.Context, props *PlayProps) {
 	<html lang="en">
 		@s.top()
-		<body>@s.navbar(ctx, props.User) @s.TimerMasthead(props.Timer, props.Level, props.CurrentLevel) @s.bottom() @s.setCountdownData()</body>
+		<body>
+			@s.navbar(ctx, props.User)
+			@s.breadcrumbs(s.newBreadcrumb("Dashboard", "dashboard"), s.newBreadcrumb("Timer", "dashboard-timer", "timerID", props.Timer.ID), s.newBreadcrumb(props.Timer.Name, "play-timer", "timerID", props.Timer.ID))
+			@s.TimerMasthead(props.Timer, props.Level, props.CurrentLevel)
+			@s.bottom()
+			@s.setCountdownData()
+		</body>
 	</html>
 }
 
@@ -47,7 +53,7 @@ templ (s *Service) TimerMasthead(timer *poker.Timer, level *poker.TimerLevel, cu
 								<h1>
 									Current Level:
 									<hr/>
-									{ format(timer.CurrentLevel) }
+									{ format(currentLevel) }
 								</h1>
 							</div>
 						</div>
@@ -57,10 +63,7 @@ templ (s *Service) TimerMasthead(timer *poker.Timer, level *poker.TimerLevel, cu
 							<div class="col text-center"><i id="toggle-timer-button" class="fa-solid fa-circle-play fa-5x"></i></div>
 						</div>
 						<div class="row">
-							<div class="col flex-row mt-2 text-center">
-							<i id="trigger-previous-timer-level" hx-get={ s.buildRoute("play-timer-previous-level", "timerID", level.TimerID) } class="fa-solid fa-angles-left fa-3x "></i> 
-							<i id="trigger-reset-timer-level" hx-get={ s.buildRoute("play-timer-reset-level", "timerID", level.TimerID) } class="fa-solid fa-arrow-rotate-left fa-3x "></i> 
-							<i id="trigger-next-timer-level" hx-get={ s.buildRoute("play-timer-next-level", "timerID", level.TimerID) } class="fa-solid fa-angles-right fa-3x "></i></div>
+							<div class="col flex-row mt-2 text-center"><i id="trigger-previous-timer-level" hx-get={ s.buildRoute("play-timer-previous-level", "timerID", level.TimerID) } class="fa-solid fa-angles-left fa-3x "></i> <i id="trigger-reset-timer-level" hx-get={ s.buildRoute("play-timer-reset-level", "timerID", level.TimerID) } class="fa-solid fa-arrow-rotate-left fa-3x "></i> <i id="trigger-next-timer-level" hx-get={ s.buildRoute("play-timer-next-level", "timerID", level.TimerID) } class="fa-solid fa-angles-right fa-3x "></i></div>
 						</div>
 					</div>
 					<div class="col-5">

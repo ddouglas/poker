@@ -186,12 +186,26 @@ func (s *Service) navbar(ctx context.Context, user *poker.User) templ.Component 
 			return err
 		}
 		if user != nil {
-			_, err = templBuffer.WriteString("<li class=\"nav-item\"><a class=\"nav-link\" href=\"")
+			_, err = templBuffer.WriteString("<li class=\"nav-item dropdown\"><a class=\"nav-link dropdown-toggle\" data-bs-toggle=\"dropdown\" role=\"button\">")
 			if err != nil {
 				return err
 			}
-			var var_13 templ.SafeURL = templ.URL(s.buildRoute("dashboard"))
-			_, err = templBuffer.WriteString(templ.EscapeString(string(var_13)))
+			var_13 := `Welcome `
+			_, err = templBuffer.WriteString(var_13)
+			if err != nil {
+				return err
+			}
+			var var_14 string = user.Name
+			_, err = templBuffer.WriteString(templ.EscapeString(var_14))
+			if err != nil {
+				return err
+			}
+			_, err = templBuffer.WriteString("</a><ul class=\"dropdown-menu\"><li><a class=\"dropdown-item\" href=\"")
+			if err != nil {
+				return err
+			}
+			var var_15 templ.SafeURL = templ.URL(s.buildRoute("dashboard"))
+			_, err = templBuffer.WriteString(templ.EscapeString(string(var_15)))
 			if err != nil {
 				return err
 			}
@@ -199,17 +213,30 @@ func (s *Service) navbar(ctx context.Context, user *poker.User) templ.Component 
 			if err != nil {
 				return err
 			}
-			var_14 := `Welcome `
-			_, err = templBuffer.WriteString(var_14)
+			var_16 := `Dashboard`
+			_, err = templBuffer.WriteString(var_16)
 			if err != nil {
 				return err
 			}
-			var var_15 string = user.Name
-			_, err = templBuffer.WriteString(templ.EscapeString(var_15))
+			_, err = templBuffer.WriteString("</a></li><li><hr class=\"dropdown-divider\"></li><li><a class=\"dropdown-item\" href=\"")
 			if err != nil {
 				return err
 			}
-			_, err = templBuffer.WriteString("</a></li>")
+			var var_17 templ.SafeURL = templ.URL(s.buildRoute("logout"))
+			_, err = templBuffer.WriteString(templ.EscapeString(string(var_17)))
+			if err != nil {
+				return err
+			}
+			_, err = templBuffer.WriteString("\">")
+			if err != nil {
+				return err
+			}
+			var_18 := `Logout`
+			_, err = templBuffer.WriteString(var_18)
+			if err != nil {
+				return err
+			}
+			_, err = templBuffer.WriteString("</a></li></ul></li>")
 			if err != nil {
 				return err
 			}
@@ -218,8 +245,8 @@ func (s *Service) navbar(ctx context.Context, user *poker.User) templ.Component 
 			if err != nil {
 				return err
 			}
-			var var_16 templ.SafeURL = templ.URL(s.buildRoute("login"))
-			_, err = templBuffer.WriteString(templ.EscapeString(string(var_16)))
+			var var_19 templ.SafeURL = templ.URL(s.buildRoute("login"))
+			_, err = templBuffer.WriteString(templ.EscapeString(string(var_19)))
 			if err != nil {
 				return err
 			}
@@ -227,8 +254,8 @@ func (s *Service) navbar(ctx context.Context, user *poker.User) templ.Component 
 			if err != nil {
 				return err
 			}
-			var_17 := `Login`
-			_, err = templBuffer.WriteString(var_17)
+			var_20 := `Login`
+			_, err = templBuffer.WriteString(var_20)
 			if err != nil {
 				return err
 			}
