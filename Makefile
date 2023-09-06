@@ -13,4 +13,5 @@ run:
 	aws-vault exec --no-session ${profile} -- go run cmd/poker/*.go
 
 apply:
-	aws-vault exec --no-session ${profile} -- terraform -chdir=terraform apply
+	cd terraform && make apply profile=${profile}
+	# aws-vault exec --no-session ${profile} -- terraform -chdir=terraform apply

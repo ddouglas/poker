@@ -4,40 +4,28 @@ import (
 	"poker"
 
 	"github.com/joho/godotenv"
-	"github.com/kelseyhightower/envconfig"
 )
 
 var appConfig struct {
-	AppURL string `envconfig:"APP_URL" required:"true"`
+	Mode   string `env:"MODE" default:"server"`
+	AppURL string `env:"APP_URL,required"`
 	Auth0  struct {
-		CallbackURL  string `envconfig:"AUTH0_CALLBACK_URL" required:"true"`
-		ClientID     string `envconfig:"AUTH0_CLIENT_ID" required:"true"`
-		ClientSecret string `envconfig:"AUTH0_CLIENT_SECRET" required:"true"`
-		Domain       string `envconfig:"AUTH0_DOMAIN" required:"true"`
+		CallbackURL  string `env:"AUTH0_CALLBACK_URL,required"`
+		ClientID     string `env:"AUTH0_CLIENT_ID,required"`
+		ClientSecret string `ssm:"/poker/auth0-client-secret,required"`
+		Domain       string `env:"AUTH0_DOMAIN,required"`
 	}
 	Session struct {
-		Key string `envconfig:"SESSION_KEY" required:"true"`
+		Key string `ssm:"/poker/session-key,required"`
 	}
-	Environment poker.Environment `envconfig:"ENVIRONMENT" required:"true"`
+	Environment poker.Environment `env:"ENVIRONMENT,required"`
 	Server      struct {
-		Port string `envconfig:"SERVER_PORT" required:"true"`
+		Port string `env:"SERVER_PORT" default:"8080"`
 	}
 }
 
 func loadConfig() {
 
-	err := godotenv.Load()
-	if err != nil {
-		logger.WithError(err).Fatal("failed to load .env")
-	}
-
-	err = envconfig.Process("", &appConfig)
-	if err != nil {
-		logger.WithError(err).Fatal("failed to load app configuration")
-	}
-
-	if !appConfig.Environment.Valid() {
-		logger.WithField("environment", string(appConfig.Environment)).Fatal("invalid value provided environment")
-	}
+	_ = godotenv.Load()
 
 }

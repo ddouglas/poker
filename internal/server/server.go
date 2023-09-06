@@ -75,7 +75,15 @@ func New(
 	return s
 }
 
+func (s *server) Mux(tmpl *templates.Service) *mux.Router {
+	tmpl.SetRouteBuild(s.BuildRoute)
+	s.templates = tmpl
+
+	return s.router
+}
+
 func (s *server) Run(tmpl *templates.Service) error {
+
 	tmpl.SetRouteBuild(s.BuildRoute)
 	s.templates = tmpl
 
@@ -117,7 +125,11 @@ func (s *server) buildRouter() *mux.Router {
 	router.HandleFunc("/", s.handleHome).Name("home").Methods(http.MethodGet)
 	router.HandleFunc("/login", s.handleLogin).Name("login").Methods(http.MethodGet)
 	router.HandleFunc("/logout", s.handleLogout).Name("logout").Methods(http.MethodGet)
-	router.PathPrefix("/static").Handler(http.StripPrefix("/static/", http.FileServer(http.FS(poker.AssetFS(s.env))))).Name("static").Methods(http.MethodGet)
+	// router.PathPrefix("/static").Handler().Name("static").Methods(http.MethodGet)
+	router.PathPrefix("/static").Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("cache-control", "max-age=86400")
+		http.StripPrefix("/static/", http.FileServer(http.FS(poker.AssetFS(s.env)))).ServeHTTP(w, r)
+	})).Name("static").Methods(http.MethodGet)
 
 	authed := router.NewRoute().Subrouter()
 	authed.Use(s.auth)
