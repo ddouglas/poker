@@ -25,7 +25,7 @@ func (s *server) handleDashboardTimers(w http.ResponseWriter, r *http.Request) {
 	err = s.templates.DashboardTimers(ctx, &templates.DashboardTimersProps{
 		User:   internal.UserFromContext(ctx),
 		Timers: timers,
-	}).Render(ctx, w)
+	}).Render(w)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to timers by user id")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -38,7 +38,7 @@ func (s *server) handleGetDashboardTimerNew(w http.ResponseWriter, r *http.Reque
 
 	var ctx = r.Context()
 
-	err := s.templates.DashboardTimersNewForm(ctx).Render(ctx, w)
+	err := s.templates.DashboardNewTimerComponent(ctx).Render(w)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to timers by user id")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -80,7 +80,7 @@ func (s *server) handlePostDashboardTimerNew(w http.ResponseWriter, r *http.Requ
 
 	uri, _ := s.router.Get("dashboard-timer").URL("timerID", timer.ID)
 	w.Header().Set("HX-Push", uri.String())
-	err = s.templates.DashboardTimerFragment(ctx, timer).Render(ctx, w)
+	err = s.templates.DashboardTimerFragment(ctx, timer).Render(w)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to render partial dashboard timer")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -112,12 +112,50 @@ func (s *server) handleGetDashboardTimer(w http.ResponseWriter, r *http.Request)
 	err = s.templates.DashboardTimer(ctx, &templates.DashboardTimerProps{
 		User:  internal.UserFromContext(ctx),
 		Timer: timer,
-	}).Render(ctx, w)
+	}).Render(w)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to render dashboard timer")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+}
+
+func (s *server) handlePostDashboardTimer(w http.ResponseWriter, r *http.Request) {
+
+	var ctx = r.Context()
+
+	vars := mux.Vars(r)
+
+	timerID, ok := vars["timerID"]
+	if !ok {
+		s.logger.Error("var timerID missing from request context")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	timer, err := s.timerRepo.Timer(ctx, timerID)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to fetch timer")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err = r.ParseForm()
+	if err != nil {
+		s.logger.WithError(err).Error("failed to parse form")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	levels := timer.Levels
+
+	err = s.decoder.Decode(&levels, r.PostForm)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to decode form")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 }
 
 func (s *server) handleDeleteDashboardTimer(w http.ResponseWriter, r *http.Request) {
@@ -149,7 +187,7 @@ func (s *server) handleDeleteDashboardTimer(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	err = s.templates.DashboardTimersFragment(ctx, timers).Render(ctx, w)
+	err = s.templates.DashboardTimersFragment(ctx, timers).Render(w)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to render dashboard timer")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -171,14 +209,21 @@ func (s *server) handleGetDashboardTimerLevelNew(w http.ResponseWriter, r *http.
 		return
 	}
 
-	levelType := r.URL.Query().Get("type")
-	if levelType == "" {
+	levelTypeStr := r.URL.Query().Get("type")
+	if levelTypeStr == "" {
 		s.logger.Error("required query param type is missing or empty")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	err := s.templates.DashboardTimerLevelNew(ctx, timerID, levelType).Render(ctx, w)
+	levelType := poker.TimerType(levelTypeStr)
+	if !levelType.Valid() {
+		s.logger.Error("invalid timer type")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err := s.templates.DashboardNewTimerLevelComponent(ctx, timerID, levelType).Render(w)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to render dashboard timer")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -225,6 +270,7 @@ func (s *server) handlePostDashboardTimerLevelNew(w http.ResponseWriter, r *http
 
 	level.ID = uuid.New().String()
 	level.DurationSec = level.DurationMin * 60
+	level.TimerID = timerID
 
 	timer.Levels = append(timer.Levels, level)
 
@@ -235,10 +281,7 @@ func (s *server) handlePostDashboardTimerLevelNew(w http.ResponseWriter, r *http
 		return
 	}
 
-	err = s.templates.DashboardTimer(ctx, &templates.DashboardTimerProps{
-		User:  internal.UserFromContext(ctx),
-		Timer: timer,
-	}).Render(ctx, w)
+	err = s.templates.DashboardTimerFragment(ctx, timer).Render(w)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to render dashboard timer")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -271,18 +314,15 @@ func (s *server) handleGetDashboardTimerLevelEdit(w http.ResponseWriter, r *http
 
 	timer, err := s.timerRepo.Timer(ctx, timerID)
 	if err != nil {
-		s.logger.Error("var levelID missing from request context")
-		w.WriteHeader(http.StatusBadRequest)
+		s.logger.WithError(err).Error("failed to fetch timer")
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if timer.UserID != user.ID {
-		err = s.templates.DashboardTimer(ctx, &templates.DashboardTimerProps{
-			User:  internal.UserFromContext(ctx),
-			Timer: timer,
-		}).Render(ctx, w)
+		err = s.templates.DashboardTimerFragment(ctx, timer).Render(w)
 		if err != nil {
-			s.logger.WithError(err).Error("failed to render dashboard timer")
+			s.logger.WithError(err).Error("failed to render DashboardTimerFragment")
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		return
@@ -298,20 +338,17 @@ func (s *server) handleGetDashboardTimerLevelEdit(w http.ResponseWriter, r *http
 	}
 
 	if level == nil {
-		err = s.templates.DashboardTimer(ctx, &templates.DashboardTimerProps{
-			User:  internal.UserFromContext(ctx),
-			Timer: timer,
-		}).Render(ctx, w)
+		err = s.templates.DashboardTimerFragment(ctx, timer).Render(w)
 		if err != nil {
-			s.logger.WithError(err).Error("failed to render dashboard timer")
+			s.logger.WithError(err).Error("failed to render DashboardTimerFragment")
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		return
 	}
 
-	err = s.templates.DashboardTimerLevelEdit(ctx, level).Render(ctx, w)
+	err = s.templates.DashboardEditTimerLevelComponent(ctx, level).Render(w)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to render dashboard timer")
+		s.logger.WithError(err).Error("failed to render DashboardEditTimerLevelComponent")
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
@@ -346,12 +383,9 @@ func (s *server) handlePostDashboardTimerLevelEdit(w http.ResponseWriter, r *htt
 	}
 
 	if timer.UserID != user.ID {
-		err = s.templates.DashboardTimer(ctx, &templates.DashboardTimerProps{
-			User:  internal.UserFromContext(ctx),
-			Timer: timer,
-		}).Render(ctx, w)
+		err = s.templates.DashboardTimerFragment(ctx, timer).Render(w)
 		if err != nil {
-			s.logger.WithError(err).Error("failed to render dashboard timer")
+			s.logger.WithError(err).Error("failed to render DashboardTimerFragment")
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		return
@@ -366,12 +400,9 @@ func (s *server) handlePostDashboardTimerLevelEdit(w http.ResponseWriter, r *htt
 		break
 	}
 	if level == nil {
-		err = s.templates.DashboardTimer(ctx, &templates.DashboardTimerProps{
-			User:  internal.UserFromContext(ctx),
-			Timer: timer,
-		}).Render(ctx, w)
+		err = s.templates.DashboardTimerFragment(ctx, timer).Render(w)
 		if err != nil {
-			s.logger.WithError(err).Error("level not found")
+			s.logger.WithError(err).Error("failed to render DashboardTimerFragment")
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		return
@@ -401,10 +432,7 @@ func (s *server) handlePostDashboardTimerLevelEdit(w http.ResponseWriter, r *htt
 		return
 	}
 
-	err = s.templates.DashboardTimer(ctx, &templates.DashboardTimerProps{
-		User:  internal.UserFromContext(ctx),
-		Timer: timer,
-	}).Render(ctx, w)
+	err = s.templates.DashboardTimerFragment(ctx, timer).Render(w)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to render dashboard timer")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -446,7 +474,7 @@ func (s *server) handleDeleteDashboardTimerLevel(w http.ResponseWriter, r *http.
 		err = s.templates.DashboardTimer(ctx, &templates.DashboardTimerProps{
 			User:  internal.UserFromContext(ctx),
 			Timer: timer,
-		}).Render(ctx, w)
+		}).Render(w)
 		if err != nil {
 			s.logger.WithError(err).Error("failed to render dashboard timer")
 			w.WriteHeader(http.StatusInternalServerError)
@@ -474,7 +502,7 @@ func (s *server) handleDeleteDashboardTimerLevel(w http.ResponseWriter, r *http.
 	err = s.templates.DashboardTimer(ctx, &templates.DashboardTimerProps{
 		User:  internal.UserFromContext(ctx),
 		Timer: timer,
-	}).Render(ctx, w)
+	}).Render(w)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to render dashboard timer")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -485,7 +513,7 @@ func (s *server) handleDeleteDashboardTimerLevel(w http.ResponseWriter, r *http.
 
 func trimLevel(levels []*poker.TimerLevel, i int) []*poker.TimerLevel {
 
-	// if i grater than the total number of levels, just bail and return the original
+	// if i greater than the total number of levels, just bail and return the original
 	if i > len(levels) {
 		return levels
 	}
@@ -639,8 +667,6 @@ func trimLevel(levels []*poker.TimerLevel, i int) []*poker.TimerLevel {
 // 		return
 // 	}
 
-// 	spew.Dump(timer, levelType, levelIdx)
-
 // 	var buffer *bytes.Buffer
 
 // 	if levelType == "blind" {
@@ -722,8 +748,6 @@ func trimLevel(levels []*poker.TimerLevel, i int) []*poker.TimerLevel {
 // 		w.WriteHeader(http.StatusInternalServerError)
 // 		return
 // 	}
-
-// 	spew.Dump(level)
 
 // 	level.TimerID = timerID
 

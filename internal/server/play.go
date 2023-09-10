@@ -59,7 +59,7 @@ func (s *server) handleGetPlayTimer(w http.ResponseWriter, r *http.Request) {
 		Timer:        timer,
 		Level:        level,
 		CurrentLevel: timer.CurrentLevel + 1,
-	}).Render(ctx, w)
+	}).Render(w)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to render dashboard timer")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -103,10 +103,10 @@ func (s *server) handleGetPlayTimerResetLevel(w http.ResponseWriter, r *http.Req
 
 	w.Header().Set("HX-Trigger-After-Settle", "countdown::reset")
 	err = s.templates.TimerMasthead(
+		ctx,
 		timer,
 		level,
-		timer.CurrentLevel+1,
-	).Render(ctx, w)
+	).Render(w)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to render dashboard timer")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -141,10 +141,10 @@ func (s *server) handleGetPlayTimerNextLevel(w http.ResponseWriter, r *http.Requ
 		timer.IsComplete = true
 
 		err = s.templates.TimerMasthead(
+			ctx,
 			timer,
 			level,
-			timer.CurrentLevel+1,
-		).Render(ctx, w)
+		).Render(w)
 		if err != nil {
 			s.logger.WithError(err).Error("failed to render dashboard timer")
 			w.WriteHeader(http.StatusInternalServerError)
@@ -181,10 +181,10 @@ func (s *server) handleGetPlayTimerNextLevel(w http.ResponseWriter, r *http.Requ
 		w.Header().Set("HX-Trigger-After-Settle", "countdown::reset")
 	}
 	err = s.templates.TimerMasthead(
+		ctx,
 		timer,
 		level,
-		timer.CurrentLevel+1,
-	).Render(ctx, w)
+	).Render(w)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to render dashboard timer")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -216,10 +216,10 @@ func (s *server) handleGetPlayTimerPreviousLevel(w http.ResponseWriter, r *http.
 
 	if timer.CurrentLevel == 0 {
 		err = s.templates.TimerMasthead(
+			ctx,
 			timer,
 			level,
-			timer.CurrentLevel+1,
-		).Render(ctx, w)
+		).Render(w)
 		if err != nil {
 			s.logger.WithError(err).Error("failed to render dashboard timer")
 			w.WriteHeader(http.StatusInternalServerError)
@@ -244,10 +244,10 @@ func (s *server) handleGetPlayTimerPreviousLevel(w http.ResponseWriter, r *http.
 
 	w.Header().Set("HX-Trigger-After-Settle", "countdown::reset")
 	err = s.templates.TimerMasthead(
+		ctx,
 		timer,
 		level,
-		timer.CurrentLevel+1,
-	).Render(ctx, w)
+	).Render(w)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to render dashboard timer")
 		w.WriteHeader(http.StatusInternalServerError)

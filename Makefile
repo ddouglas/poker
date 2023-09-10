@@ -6,9 +6,6 @@ countdown:
 watch:
 	npm run --prefix internal/javascript watch
 
-generate:
-	templ generate
-
 run:  
 	aws-vault exec --no-session ${profile} -- go run cmd/poker/*.go
 

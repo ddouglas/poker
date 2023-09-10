@@ -6,7 +6,6 @@ import (
 	"io"
 	"poker"
 	"poker/internal/store/dynamo"
-	"time"
 
 	"github.com/a-h/templ"
 	"github.com/sirupsen/logrus"
@@ -55,32 +54,11 @@ func (s *Service) SetRouteBuild(b func(string, ...any) (string, error)) {
 func (s *Service) buildRoute(name string, args ...any) string {
 	route, err := s.funcs.buildRoute(name, args...)
 	if err != nil {
-		s.logger.WithField("name", name).WithError(err).Error("failed to generate styles-css route")
+		s.logger.WithError(err).Errorf("failed to generate %s route", name)
 		return ""
 	}
 
 	return route
-}
-
-func (s *Service) setCountdownData() templ.Component {
-
-	var scriptURI = fmt.Sprintf("%s/js/countdown.js?v=%d", s.buildRoute("static"), time.Now().Unix())
-
-	const javascriptData = `
-		<script src='%s'></script>
-	`
-
-	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
-
-		s := fmt.Sprintf(
-			javascriptData,
-			scriptURI,
-		)
-
-		_, err := io.WriteString(w, s)
-		return err
-
-	})
 }
 
 type breadcrumb struct {
