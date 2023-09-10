@@ -6,7 +6,6 @@ import (
 	"poker"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	g "github.com/maragudk/gomponents"
 	htmx "github.com/maragudk/gomponents-htmx"
 	. "github.com/maragudk/gomponents/html"
@@ -44,8 +43,6 @@ func (s *Service) TimerMasthead(ctx context.Context, timer *poker.Timer, level *
 	if int(timer.CurrentLevel+1) <= len(timer.Levels)-1 {
 		nextLevel = timer.Levels[timer.CurrentLevel+1]
 	}
-
-	spew.Dump(level)
 
 	return Div(
 		ID("timer-container"), Class("container"), htmx.SwapOOB("true"),

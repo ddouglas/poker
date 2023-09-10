@@ -6,21 +6,16 @@ var abort: AbortController
 function initAbort() {
     abort = new AbortController()
 }
+
 initAbort()
 
 document.addEventListener("DOMContentLoaded", () => {
-    console.log("DOM Ready")
+
+    console.log("DOMContentLoaded :: start")
     initCountdown()
-
     initTimerToggleEventClick()
+    console.log("DOMContentLoaded :: complete")
 })
-
-// document.body.addEventListener("htmx:load", (details) => {
-//     console.debug("countdown::htmx::load start", details)
-
-
-//     console.debug("countdown::htmx::load complete")
-// })
 
 document.body.addEventListener("countdown::proceed", () => {
     console.debug("countdown::proceed :: start")

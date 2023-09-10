@@ -46,7 +46,7 @@ func (s *server) handleGetPlayTimer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var currentLevel = int(timer.CurrentLevel)
-	if currentLevel >= len(timer.Levels)-1 {
+	if currentLevel > len(timer.Levels)-1 {
 		timer.CurrentLevel = 0
 	}
 

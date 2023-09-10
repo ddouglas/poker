@@ -22,8 +22,6 @@ export function initCountdown() {
         durationSecStr,
         // The HTMLElement representing the text of our timer
         timer,
-        // // The HTMLElement representing the button that is used to start and stop the timer
-        // timerToggle
     } = elements
 
     // One scenario that can occur is when the timer is complete, meaning all levels have been run through,
@@ -43,18 +41,19 @@ export function initCountdown() {
         },
         onComplete: () => {
 
-            const nextLevelURIContinue = `${nextLevelURI}?proceed=true`
+            const nextLevelURIProceed = `${nextLevelURI}?proceed=true`
 
             htmx.ajax(
                 'GET',
-                nextLevelURIContinue,
+                nextLevelURIProceed,
                 htmx.find('#timer-container')
             )
+
         }
     })
 
-
     console.debug("initCountdown :: complete")
+
 }
 
 export function toggleCountdown() {
@@ -74,7 +73,6 @@ export function toggleCountdown() {
 
     const { timerToggle } = elements
 
-
     countdown.toggle()
 
     if (!countdown.getIsRunning()) {
@@ -90,6 +88,10 @@ export function toggleCountdown() {
 }
 
 export function stopCountdown() {
+
+    console.debug("stopCountdown :: start")
+
+
     if (!countdown) {
         console.error("failed to stop countdown, countdown is undefined", countdown)
         return
@@ -108,9 +110,14 @@ export function stopCountdown() {
     htmx.removeClass(timerToggle, "fa-circle-stop")
     htmx.addClass(timerToggle, "fa-circle-play")
 
+    console.debug("stopCountdown :: complete")
+
 }
 
 export function startCountdown() {
+
+    console.debug("startCountdown :: start")
+
     const elements = fetchElements()
     if (!elements) {
         console.error("failed to fetch elements, unable to register click event on timer toggle")
@@ -122,5 +129,8 @@ export function startCountdown() {
     htmx.removeClass(timerToggle, "fa-circle-stop")
     htmx.addClass(timerToggle, "fa-circle-play")
     countdown?.start()
+
+    console.debug("startCountdown :: complete")
+
 }
 

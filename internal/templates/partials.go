@@ -135,9 +135,6 @@ func (s *Service) gbottom() g.Node {
 			g.Attr("integrity", "sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm"),
 			g.Attr("crossorigin", "anonymous"),
 		),
-		Script(
-			Src("https://unpkg.com/hyperscript.org@0.9.11"),
-		),
 		s.ghtmxDebug(),
 	})
 }

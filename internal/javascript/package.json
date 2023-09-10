@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "esbuild src/main.ts --bundle --sourcemap --target=es2020 --outfile=../../assets/js/countdown.js",
-    "watch": "esbuild src/main.ts --bundle --sourcemap --target=es2020 --outfile=../../assets/js/countdown.js --watch"
+    "build": "esbuild src/main.ts --bundle --minify --sourcemap --target=es2020 --outfile=../../assets/js/countdown.js",
+    "watch": "esbuild src/main.ts --bundle --minify --sourcemap --target=es2020 --outfile=../../assets/js/countdown.js --watch"
   },
   "repository": {
     "type": "git",

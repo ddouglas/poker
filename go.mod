@@ -3,7 +3,6 @@ module poker
 go 1.20
 
 require (
-	github.com/a-h/templ v0.2.316
 	github.com/akrylysov/algnhsa v1.0.0
 	github.com/aws/aws-sdk-go-v2 v1.21.0
 	github.com/aws/aws-sdk-go-v2/config v1.13.1
