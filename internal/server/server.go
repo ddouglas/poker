@@ -10,26 +10,33 @@ import (
 	"poker/internal/templates"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/polly"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/ddouglas/dynastore"
+	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
 	"github.com/sirupsen/logrus"
 )
 
 type server struct {
-	env    poker.Environment
-	appURL string
-	port   string
+	appURL      string
+	env         poker.Environment
+	port        string
+	audioBucket string
 
-	http     *http.Server
-	logger   *logrus.Logger
-	router   *mux.Router
-	sessions *dynastore.Store
-	decoder  *schema.Decoder
+	http   *http.Server
+	router *mux.Router
 
 	// Services
 	authenticator *authenticator.Service
+	decoder       *schema.Decoder
+	logger        *logrus.Logger
+	polly         *polly.Client
+	s3            *s3.Client
+	sessions      *dynastore.Store
 	templates     *templates.Service
+	validator     *validator.Validate
 
 	// Repositories
 	timerRepo *dynamo.TimerRepository
@@ -40,9 +47,13 @@ func New(
 	env poker.Environment,
 	appURL string,
 	port string,
+	audioBucket string,
 	logger *logrus.Logger,
+	validator *validator.Validate,
 
 	authenticator *authenticator.Service,
+	polly *polly.Client,
+	s3 *s3.Client,
 	sessions *dynastore.Store,
 
 	timerRepo *dynamo.TimerRepository,
@@ -50,14 +61,18 @@ func New(
 ) *server {
 
 	s := &server{
-		env:      env,
-		appURL:   appURL,
-		port:     port,
-		logger:   logger,
-		sessions: sessions,
-		decoder:  schema.NewDecoder(),
+		appURL:      appURL,
+		env:         env,
+		port:        port,
+		audioBucket: audioBucket,
 
 		authenticator: authenticator,
+		decoder:       schema.NewDecoder(),
+		logger:        logger,
+		polly:         polly,
+		s3:            s3,
+		sessions:      sessions,
+		validator:     validator,
 
 		timerRepo: timerRepo,
 		userRepo:  userRepo,
@@ -187,6 +202,12 @@ func (s *server) buildRouter() *mux.Router {
 			http.MethodDelete: s.handleDeleteDashboardTimerLevel,
 		}[r.Method](w, r)
 	}).Methods(http.MethodGet, http.MethodPost, http.MethodDelete).Name("dashboard-timer-level")
+
+	authed.HandleFunc("/dashboard/timers/{timerID}/levels/{levelID}/audio/{action}", func(w http.ResponseWriter, r *http.Request) {
+		map[string]http.HandlerFunc{
+			http.MethodGet: s.handleGetDashboardTimerLevelAudio,
+		}[r.Method](w, r)
+	}).Methods(http.MethodGet, http.MethodPost, http.MethodDelete).Name("dashboard-timer-level-audio")
 
 	return router
 }

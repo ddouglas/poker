@@ -9,14 +9,14 @@ resource "aws_apigatewayv2_api" "poker" {
   }
 }
 
-resource "aws_apigatewayv2_domain_name" "poker" {
-  domain_name = local.default_domain
-  domain_name_configuration {
-    certificate_arn = aws_acm_certificate.poker.arn
-    endpoint_type   = "REGIONAL"
-    security_policy = "TLS_1_2"
-  }
-}
+# resource "aws_apigatewayv2_domain_name" "poker" {
+#   domain_name = local.default_domain
+#   domain_name_configuration {
+#     certificate_arn = aws_acm_certificate.poker.arn
+#     endpoint_type   = "REGIONAL"
+#     security_policy = "TLS_1_2"
+#   }
+# }
 
 resource "aws_apigatewayv2_stage" "poker" {
   name        = "primary"
@@ -37,8 +37,8 @@ resource "aws_apigatewayv2_stage" "poker" {
   }
 }
 
-resource "aws_apigatewayv2_api_mapping" "poker" {
-  api_id      = aws_apigatewayv2_api.poker.id
-  domain_name = aws_apigatewayv2_domain_name.poker.id
-  stage       = aws_apigatewayv2_stage.poker.id
-}
+# resource "aws_apigatewayv2_api_mapping" "poker" {
+#   api_id      = aws_apigatewayv2_api.poker.id
+#   domain_name = aws_apigatewayv2_domain_name.poker.id
+#   stage       = aws_apigatewayv2_stage.poker.id
+# }

@@ -24,7 +24,9 @@ module "lambda" {
   log_retention_in_days = 3
   paramstore_prefix     = local.ssm_prefix
   additional_role_policies = {
-    allow_dynamodb_basic = data.aws_iam_policy_document.allow_dynamodb_basic.json
+    allow_dynamodb_basic   = data.aws_iam_policy_document.allow_dynamodb_basic.json
+    allow_s3_full          = data.aws_iam_policy_document.allow_s3_full.json
+    allow_polly_synthesize = data.aws_iam_policy_document.allow_polly_synthesize.json
   }
 
 }
@@ -37,6 +39,7 @@ module "routes" {
   api_execution_arn   = aws_apigatewayv2_api.poker.execution_arn
   function_name       = module.lambda.function_name
   function_invoke_arn = module.lambda.function_invoke_arn
+
   routes = [
     "GET /",
     "GET /login",

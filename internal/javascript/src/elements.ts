@@ -6,16 +6,22 @@ interface ElementsAndAttributes {
     nextTimerButton: HTMLElement | null
     nextLevelURI: string
     durationSecStr: string
+    audioPlay: HTMLAudioElement | null
+    audioContinue: HTMLAudioElement | null
+    audioBeep: HTMLAudioElement | null
 }
 
 export function fetchElements(): ElementsAndAttributes | null {
     const timerContainer = document.getElementById('timer-container')
     const timer = document.getElementById('timer')
     const timerToggle = document.getElementById("toggle-timer-button")
+    const audioPlay = document.getElementById("audio-play") as HTMLAudioElement | null
+    const audioContinue = document.getElementById("audio-continue") as HTMLAudioElement | null
+    const audioBeep = document.getElementById("audio-beep") as HTMLAudioElement | null
     const nextTimerButton = document.getElementById("trigger-next-timer-level")
 
     if (!timerContainer) {
-        console.error("Failed to fetch timer-container by id")
+        console.error("failed to fetch timer-container by id")
         return null
     }
 
@@ -41,6 +47,17 @@ export function fetchElements(): ElementsAndAttributes | null {
         durationSecStr = "0"
     }
 
-    return { timer, timerContainer, timerToggle, nextTimerButton, nextLevelURI, durationSecStr }
+
+    return {
+        timer,
+        timerContainer,
+        timerToggle,
+        nextTimerButton,
+        nextLevelURI,
+        durationSecStr,
+        audioPlay,
+        audioContinue,
+        audioBeep
+    }
 
 }

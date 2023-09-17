@@ -22,6 +22,9 @@ var appConfig struct {
 	Server      struct {
 		Port string `env:"SERVER_PORT" default:"8080"`
 	}
+	Audio struct {
+		S3Bucket string `env:"POKER_AUDIO_CACHE_BUCKET,required"`
+	}
 }
 
 func loadConfig() {

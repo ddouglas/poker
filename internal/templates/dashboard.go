@@ -16,7 +16,7 @@ func (s *Service) Dashboard(ctx context.Context, user *poker.User) g.Node {
 			Lang("en"),
 			s.gtop(ctx),
 			Body(
-				s.gnavbar(ctx, user),
+				s.gnavbar(ctx),
 				Div(
 					Class("container"),
 					s.dashboardUserCallout(ctx, user),
@@ -89,7 +89,7 @@ func (s *Service) DashboardTimers(ctx context.Context, props *DashboardTimersPro
 			Lang("en"),
 			s.gtop(ctx),
 			Body(
-				s.gnavbar(ctx, props.User),
+				s.gnavbar(ctx),
 				Div(
 					Class("container"),
 					s.dashboardUserCallout(ctx, props.User),
@@ -201,7 +201,11 @@ func (s *Service) dashboardTimerListItemFragment(ctx context.Context, timer *pok
 
 }
 
-func (s *Service) DashboardNewTimerComponent(ctx context.Context) g.Node {
+type DashboardTimerNewProps struct {
+	Errors []string
+}
+
+func (s *Service) DashboardNewTimerComponent(ctx context.Context, props *DashboardTimerNewProps) g.Node {
 	return Div(
 		ID("dashboard-section"), g.Attr("hx-swap-oob", "true"),
 		Div(
@@ -219,6 +223,7 @@ func (s *Service) DashboardNewTimerComponent(ctx context.Context) g.Node {
 						Class("card"),
 						Div(
 							Class("card-body"),
+							s.renderErrorAlert(props.Errors),
 							FormEl(
 								g.Attr("hx-post", s.buildRoute("dashboard-timers-new")), g.Attr("hx-target", "#dashboard-section"),
 								Div(
@@ -228,7 +233,7 @@ func (s *Service) DashboardNewTimerComponent(ctx context.Context) g.Node {
 										g.Text("Timer Name"),
 									),
 									Input(
-										Type("text"), Class("form-control"), AutoComplete("off"), Name("name"),
+										ID("timer-name"), htmx.Preserve("true"), Type("text"), Class("form-control"), AutoComplete("off"), Name("name"),
 									),
 								),
 								Div(
@@ -246,6 +251,30 @@ func (s *Service) DashboardNewTimerComponent(ctx context.Context) g.Node {
 	)
 }
 
+func (s *Service) renderErrorAlert(errors []string) g.Node {
+
+	if len(errors) == 0 {
+		return nil
+	}
+
+	errorLines := make([]g.Node, 0, len(errors))
+	for _, err := range errors {
+		errorLines = append(errorLines, Li(g.Text(err)))
+	}
+
+	return Div(
+		Class("row"),
+		Div(
+			Class("col"),
+			Div(
+				Class("alert alert-danger"),
+				Strong(g.Text("The following errors were encountered whilst processing your request")),
+				Ul(errorLines...),
+			),
+		),
+	)
+}
+
 type DashboardTimerProps struct {
 	User  *poker.User
 	Timer *poker.Timer
@@ -257,7 +286,7 @@ func (s *Service) DashboardTimer(ctx context.Context, props *DashboardTimerProps
 			Lang("en"),
 			s.gtop(ctx),
 			Body(
-				s.gnavbar(ctx, props.User),
+				s.gnavbar(ctx),
 				Div(
 					Class("container"),
 					s.dashboardUserCallout(ctx, props.User),
@@ -414,7 +443,15 @@ func (s *Service) dashboardTimerLevelComponent(ctx context.Context, idx int, lev
 
 }
 
-func (s *Service) DashboardNewTimerLevelComponent(ctx context.Context, timerID string, levelType poker.TimerType) g.Node {
+type DashboardNewTimerLevelProps struct {
+	TimerID   string
+	LevelType poker.LevelType
+	Errors    []string
+}
+
+func (s *Service) DashboardNewTimerLevelComponent(ctx context.Context, props *DashboardNewTimerLevelProps) g.Node {
+
+	timerID, levelType, errors := props.TimerID, props.LevelType, props.Errors
 
 	return Div(
 		Class("row"),
@@ -422,64 +459,72 @@ func (s *Service) DashboardNewTimerLevelComponent(ctx context.Context, timerID s
 			Class("col"),
 			Div(
 				Class("card"),
+				ID("card-new-level"),
 				Div(
 					Class("card-header text-center text-capitalize"),
 					g.Textf("Create New %s", levelType.String()),
 				),
 				Div(
 					Class("card-body"),
+					s.renderErrorAlert(errors),
 					FormEl(
 						htmx.Post(s.buildRoute("dashboard-timer-levels", "timerID", timerID)),
+						htmx.Target("#card-new-level"),
 						Div(
 							g.If(
-								levelType == poker.TimerTypeBlind,
+								levelType == poker.LevelTypeBlind,
 								group(
-									Class("row row-cols-lg-auto g-3 justify-content-between align-items-center"),
+									Class("row row-cols-lg-3 align-items-center"),
 
 									Div(
 										Class("col-12"),
 										Div(
+											Label(g.Text("Small Blind")),
 											Input(
-												Class("form-control"), Type("number"), Name("SmallBlind"), Placeholder("Small Blind"),
+												Class("form-control"), Type("number"), Name("SmallBlind"),
 											),
 										),
 									),
 									Div(
 										Class("col-12"),
 										Div(
+											Label(g.Text("Big Blind")),
 											Input(
-												Class("form-control"), Type("number"), Name("BigBlind"), Placeholder("Big Blind"),
+												Class("form-control"), Type("number"), Name("BigBlind"),
 											),
 										),
 									),
+									// Div(
+									// 	Class("col-12"),
+									// 	Div(
+									// 		Label(g.Text("Small Blind")),
+									// 		Input(
+									// 			Class("form-control"), Type("number"), Name("Ante"), Placeholder("Ante"),
+									// 		),
+									// 	),
+									// ),
 									Div(
 										Class("col-12"),
 										Div(
+											Label(g.Text("Duration (minutes)")),
 											Input(
-												Class("form-control"), Type("number"), Name("Ante"), Placeholder("Ante"),
-											),
-										),
-									),
-									Div(
-										Class("col-12"),
-										Div(
-											Input(
-												Class("form-control"), Type("number"), Name("DurationMin"), Placeholder("Duration (minutes)"),
+												Class("form-control"), Type("number"), Name("DurationMin"),
 											),
 										),
 									),
 								),
 							),
 							g.If(
-								levelType == poker.TimerTypeBreak,
+								levelType == poker.LevelTypeBreak,
 								group(
-									Class("row row-cols-lg-auto g-3 justify-content-center align-items-center"),
+									Class("row row-cols-lg-4 justify-content-center align-items-center"),
 
 									Div(
 										Class("col-12"),
 										Div(
+											Label(g.Text("Duration (minutes)")),
 											Input(
-												Class("form-control "), Type("number"), Name("DurationMin"), Placeholder("Duration (minutes)"),
+												Class("form-control"), Type("number"), Name("DurationMin"),
 											),
 										),
 									),
@@ -514,7 +559,18 @@ func (s *Service) DashboardNewTimerLevelComponent(ctx context.Context, timerID s
 
 }
 
-func (s *Service) DashboardEditTimerLevelComponent(ctx context.Context, level *poker.TimerLevel) g.Node {
+func NewDashboardEditTimerLevelProps(level *poker.TimerLevel, errors []string) *DashboardEditTimerLevelProps {
+	return &DashboardEditTimerLevelProps{level, errors}
+}
+
+type DashboardEditTimerLevelProps struct {
+	level  *poker.TimerLevel
+	errors []string
+}
+
+func (s *Service) DashboardEditTimerLevelComponent(ctx context.Context, props *DashboardEditTimerLevelProps) g.Node {
+
+	level, errors := props.level, props.errors
 
 	return Div(
 		Class("row"),
@@ -522,65 +578,58 @@ func (s *Service) DashboardEditTimerLevelComponent(ctx context.Context, level *p
 			Class("col"),
 			Div(
 				Class("card"),
+				ID("card-new-level"),
 				Div(
 					Class("card-header text-center text-capitalize"),
 					g.Textf("Edit %s", level.Type.String()),
 				),
 				Div(
 					Class("card-body"),
+					s.renderErrorAlert(errors),
+
 					FormEl(
 						htmx.Post(s.buildRoute("dashboard-timer-level", "timerID", level.TimerID, "levelID", level.ID)),
+						htmx.Target("#card-new-level"),
 						Div(
 							g.If(
-								level.Type == poker.TimerTypeBlind,
+								level.Type == poker.LevelTypeBlind,
 								group(
-									Class("row row-cols-lg-auto g-3 justify-content-between align-items-center"),
+									Class("row row-cols-lg-3 align-items-center"),
 
 									Div(
 										Class("col-12"),
-										Div(
-											Input(
-												Class("form-control"), Type("number"), Name("SmallBlind"), Value(format(level.SmallBlind)),
-											),
+										Label(g.Text("Small Blind")),
+										Input(
+											Class("form-control"), Type("number"), Name("SmallBlind"), Value(format(level.SmallBlind)),
 										),
 									),
 									Div(
 										Class("col-12"),
-										Div(
-											Input(
-												Class("form-control"), Type("number"), Name("BigBlind"), Value(format(level.BigBlind)),
-											),
+										Label(g.Text("Big Blind")),
+										Input(
+											Class("form-control"), Type("number"), Name("BigBlind"), Value(format(level.BigBlind)),
 										),
 									),
+
 									Div(
 										Class("col-12"),
-										Div(
-											Input(
-												Class("form-control"), Type("number"), Name("Ante"), Value(format(level.Ante)),
-											),
-										),
-									),
-									Div(
-										Class("col-12"),
-										Div(
-											Input(
-												Class("form-control"), Type("number"), Name("DurationMin"), Value(format(level.DurationMin)),
-											),
+										Label(g.Text("Duration (minutes)")),
+										Input(
+											Class("form-control"), Type("number"), Name("DurationMin"), Value(format(level.DurationMin)),
 										),
 									),
 								),
 							),
 							g.If(
-								level.Type == poker.TimerTypeBreak,
+								level.Type == poker.LevelTypeBreak,
 								group(
-									Class("row row-cols-lg-auto g-3 justify-content-center align-items-center"),
+									Class("row row-cols-lg-3 justify-content-center align-items-center"),
 
 									Div(
 										Class("col-12"),
-										Div(
-											Input(
-												Class("form-control "), Type("number"), Name("DurationMin"), Value(format(level.DurationMin)),
-											),
+										Label(g.Text("Duration (minutes)")),
+										Input(
+											Class("form-control"), Type("number"), Name("DurationMin"), Value(format(level.DurationMin)),
 										),
 									),
 								),

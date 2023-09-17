@@ -2,14 +2,13 @@ package templates
 
 import (
 	"context"
-	"poker"
 	"poker/internal"
 
 	g "github.com/maragudk/gomponents"
 	. "github.com/maragudk/gomponents/html"
 )
 
-func (s *Service) gtop(ctx context.Context) g.Node {
+func (s *Service) gtop(_ context.Context) g.Node {
 	return Head(
 		Meta(Charset("utf-8")),
 		TitleEl(g.Text("R | V Poker")),
@@ -33,7 +32,7 @@ func (s *Service) gtop(ctx context.Context) g.Node {
 	)
 }
 
-func (s *Service) gnavbar(ctx context.Context, user *poker.User) g.Node {
+func (s *Service) gnavbar(ctx context.Context) g.Node {
 
 	return Nav(
 		Class("navbar navbar-expand-lg bg-dark"),

@@ -22,6 +22,8 @@ export function initCountdown() {
         durationSecStr,
         // The HTMLElement representing the text of our timer
         timer,
+        // The HTMLAudioElement that house the beep sound that starts playing at 11 seconds remaining
+        audioBeep,
     } = elements
 
     // One scenario that can occur is when the timer is complete, meaning all levels have been run through,
@@ -35,19 +37,41 @@ export function initCountdown() {
     countdown = new Countdown({
         initialValue: parsedDuractionSec,
         showHour: parsedDuractionSec > 3600,
-        emitter: (text: string) => {
+        emitter: (num: number, text: string) => {
             timer.innerHTML = text
             console.debug(`received emitted value ${text}`)
+            if (num == 11) {
+                console.log("starting end of level beep")
+                // The Clock has started. Blinds are now XXX/XXX
+                const { audioBeep } = elements
+                if (!audioBeep) {
+                    console.error("audio play is undefined :-(")
+                }
+                audioBeep?.play().then(r => {
+                    console.log("end of level beep is playing")
+                }).catch(e => {
+                    console.error("There was an issue playing audio beep", e)
+                })
+            }
         },
         onComplete: () => {
 
-            const nextLevelURIProceed = `${nextLevelURI}?proceed=true`
-
-            htmx.ajax(
-                'GET',
-                nextLevelURIProceed,
-                htmx.find('#timer-container')
-            )
+            if (nextLevelURI) {
+                const nextLevelURIProceed = `${nextLevelURI}?proceed=true`
+                setTimeout(() => {
+                    console.log("timeout set for 1 second")
+                    htmx.ajax(
+                        'GET',
+                        nextLevelURIProceed,
+                        htmx.find('#timer-container')
+                    )
+                }, 1000)
+            } else {
+                // If next level uri is missing, this missing there is no next level to go to, so just update the masthead with timer complete and swap out the class
+                htmx.removeClass(timer, "timer-large-font")
+                htmx.addClass(timer, "timer-complete-font")
+                timer.innerHTML = "Timer Complete"
+            }
 
         }
     })
@@ -75,10 +99,25 @@ export function toggleCountdown() {
 
     countdown.toggle()
 
+
     if (!countdown.getIsRunning()) {
         htmx.removeClass(timerToggle, "fa-circle-stop")
         htmx.addClass(timerToggle, "fa-circle-play")
     } else {
+
+        if (!countdown.hasCounted()) {
+            // The Clock has started. Blinds are now XXX/XXX
+            const { audioPlay } = elements
+            if (!audioPlay) {
+                console.error("audio play is undefined :-(")
+            }
+            audioPlay?.play().then(r => {
+                console.log("audio is playing")
+            }).catch(e => {
+                console.error("There was an issue playing audio play", e)
+            })
+        }
+
         htmx.removeClass(timerToggle, "fa-circle-play")
         htmx.addClass(timerToggle, "fa-circle-stop")
     }
@@ -90,7 +129,6 @@ export function toggleCountdown() {
 export function stopCountdown() {
 
     console.debug("stopCountdown :: start")
-
 
     if (!countdown) {
         console.error("failed to stop countdown, countdown is undefined", countdown)
@@ -124,7 +162,16 @@ export function startCountdown() {
         return
     }
 
-    const { timerToggle } = elements
+
+    // The Clock has started. Blinds are now XXX/XXX
+    const { timerToggle, audioContinue } = elements
+
+    audioContinue?.play().then(r => {
+        console.log("audio is playing")
+    }).catch(e => {
+        console.error("There was an issue playing audio continue", e)
+    })
+
 
     htmx.removeClass(timerToggle, "fa-circle-stop")
     htmx.addClass(timerToggle, "fa-circle-play")

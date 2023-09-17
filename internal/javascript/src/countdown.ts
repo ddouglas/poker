@@ -1,7 +1,7 @@
 interface CountdownOpts {
     initialValue: number
     showHour: boolean
-    emitter: (current: string) => void
+    emitter: (currentInt: number, currentStr: string) => void
     onComplete: () => void
 }
 
@@ -9,7 +9,7 @@ class Countdown {
     private initialValue: number
     private showHour: boolean
     private isRunning: boolean = false
-    private emitter: (current: string) => void
+    private emitter: (currentInt: number, currentStr: string) => void
     private onComplete: () => void
     private countdownValue: number;
     private interval: ReturnType<typeof setTimeout> | null;
@@ -27,7 +27,7 @@ class Countdown {
         // console.debug("Countdown.decrementCountdown() start")
         this.countdownValue--;
 
-        this.emitter(this.format(this.countdownValue))
+        this.emitter(this.countdownValue, this.format(this.countdownValue))
         if (this.countdownValue === 0) {
             this.stop();
             this.onComplete();
@@ -126,6 +126,10 @@ class Countdown {
 
     public getIsRunning() {
         return this.isRunning
+    }
+
+    public hasCounted() {
+        return this.countdownValue < this.initialValue
     }
 
     public reset() {

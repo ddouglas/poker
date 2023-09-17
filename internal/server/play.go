@@ -16,26 +16,39 @@ func (s *server) handleGetPlayTimer(w http.ResponseWriter, r *http.Request) {
 
 	var ctx = r.Context()
 
+	entry := s.logger.WithContext(ctx)
+
+	user := internal.UserFromContext(ctx)
+
 	vars := mux.Vars(r)
 
 	timerID, ok := vars["timerID"]
 	if !ok {
-		s.logger.Error("var timerID missing from request context")
-		w.WriteHeader(http.StatusBadRequest)
+		entry.Error("var timerID missing from request context")
+		_ = s.templates.ResourceUnavailable(ctx).Render(w)
 		return
 	}
 
+	entry = entry.WithField("timerID", timerID)
+
 	timer, err := s.timerRepo.Timer(ctx, timerID)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to fetch timer")
-		w.WriteHeader(http.StatusBadRequest)
+		entry.WithError(err).Error("failed to fetch timer")
+		_ = s.templates.ResourceUnavailable(ctx).Render(w)
+		return
+	}
+
+	if timer.UserID != user.ID {
+		entry.Error("timer is not owned by authenticated user")
+		_ = s.templates.ResourceUnavailable(ctx).Render(w)
+
 		return
 	}
 
 	if len(timer.Levels) <= 0 {
 		location, err := s.BuildRoute("dashboard-timer", "timerID", timer.ID)
 		if err != nil {
-			s.logger.WithError(err).Error("failed to build route to redirect to")
+			entry.WithError(err).Error("failed to build route to redirect to")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -61,8 +74,8 @@ func (s *server) handleGetPlayTimer(w http.ResponseWriter, r *http.Request) {
 		CurrentLevel: timer.CurrentLevel + 1,
 	}).Render(w)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to render dashboard timer")
-		w.WriteHeader(http.StatusInternalServerError)
+		entry.WithError(err).Error("failed to render dashboard timer")
+		_ = s.templates.ResourceUnavailable(ctx).Render(w)
 		return
 	}
 

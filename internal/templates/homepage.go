@@ -14,7 +14,7 @@ func (s *Service) Homepage(ctx context.Context, user *poker.User) g.Node {
 			h.Lang("en"),
 			s.gtop(ctx),
 			h.Body(
-				s.gnavbar(ctx, user),
+				s.gnavbar(ctx),
 				h.Div(
 					h.Class("banner"),
 					h.Div(

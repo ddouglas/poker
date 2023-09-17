@@ -25,7 +25,7 @@ func (s *Service) Play(ctx context.Context, props *PlayProps) g.Node {
 			Lang("en"),
 			s.gtop(ctx),
 			Body(
-				s.gnavbar(ctx, props.User),
+				s.gnavbar(ctx),
 				s.TimerMasthead(ctx, props.Timer, props.Level),
 				s.gbottom(),
 				Script(
@@ -46,6 +46,30 @@ func (s *Service) TimerMasthead(ctx context.Context, timer *poker.Timer, level *
 
 	return Div(
 		ID("timer-container"), Class("container"), htmx.SwapOOB("true"),
+		Div(
+			Audio(
+				ID("audio-play"),
+				Source(
+					Src(s.buildRoute("dashboard-timer-level-audio", "timerID", level.TimerID, "levelID", level.ID, "action", "play")),
+					Type("audio/mpeg"),
+				),
+				// DataAttr("continue-audio", s.buildRoute("dashboard-timer-level-audio", "timerID", level.TimerID, "levelID", level.ID, "action", "contiue")),
+			),
+			Audio(
+				ID("audio-continue"),
+				Source(
+					Src(s.buildRoute("dashboard-timer-level-audio", "timerID", level.TimerID, "levelID", level.ID, "action", "continue")),
+					Type("audio/mpeg"),
+				),
+			),
+			Audio(
+				ID("audio-beep"),
+				Source(
+					Src("/static/audio/10_sec_beep_countdown.mp3"),
+					Type("audio/mpeg"),
+				),
+			),
+		),
 		Div(
 			Class("row"),
 			Div(
@@ -186,11 +210,11 @@ func (s *Service) formatPlayLevelDisplay(ctx context.Context, header string, lev
 			nodes,
 			group(
 				g.If(
-					level.Type == poker.TimerTypeBlind,
+					level.Type == poker.LevelTypeBlind,
 					g.Textf("%.0f / %.0f", level.SmallBlind, level.BigBlind),
 				),
 				g.If(
-					level.Type == poker.TimerTypeBreak,
+					level.Type == poker.LevelTypeBreak,
 					g.Text("Break"),
 				),
 			),

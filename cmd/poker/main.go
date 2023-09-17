@@ -16,8 +16,11 @@ import (
 	"github.com/akrylysov/algnhsa"
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/polly"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/ddouglas/dynastore"
+	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
 )
 
@@ -44,9 +47,11 @@ func main() {
 		logger.WithError(err).Fatal("failed load configuration")
 	}
 
-	svc := dynamodb.NewFromConfig(awsCfg)
+	dynamodbClient := dynamodb.NewFromConfig(awsCfg)
+	pollyClient := polly.NewFromConfig(awsCfg)
+	s3Client := s3.NewFromConfig(awsCfg)
 
-	sessionStore, _ := dynastore.New(svc, dynastore.TableName("poker-sessions-us-east-1"), dynastore.PrimaryKey("ID"))
+	sessionStore, _ := dynastore.New(dynamodbClient, dynastore.TableName("poker-sessions-us-east-1"), dynastore.PrimaryKey("ID"))
 
 	gob.Register(make(map[string]any))
 
@@ -60,16 +65,22 @@ func main() {
 		logger.WithError(err).Fatal("failed to provision authenticator service")
 	}
 
-	timerRepo := dynamo.NewTimerRepository(svc, "poker-timers-us-east-1")
-	userRepo := dynamo.NewUserRepository(svc, "poker-users-us-east-1")
+	timerRepo := dynamo.NewTimerRepository(dynamodbClient, "poker-timers-us-east-1")
+	userRepo := dynamo.NewUserRepository(dynamodbClient, "poker-users-us-east-1")
+
+	validator := validator.New(validator.WithRequiredStructEnabled())
 
 	server := server.New(
 		appConfig.Environment,
 		appConfig.AppURL,
 		appConfig.Server.Port,
+		appConfig.Audio.S3Bucket,
 		logger,
+		validator,
 
 		authSrv,
+		pollyClient,
+		s3Client,
 		sessionStore,
 
 		timerRepo,
